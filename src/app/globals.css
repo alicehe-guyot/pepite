@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Pépite — tokens de la DA V1 (docs/SPEC.md §8.10) */
+html {
+  --font-title: "Bricolage Grotesque Variable";
+  --font-body: "Instrument Sans Variable";
+}
+
+:root {
+  --ink: #15171a;
+  --muted: #5f646b;
+  --faint: #9ca1a7;
+  --line: #eceeef;
+  --border: #d5d8da;
+  --surface: #f3f5f3;
+  --bg: #ffffff;
+  --accent: #c2255c; /* framboise */
+  --accent-soft: #c2255c1f;
+  --sun: #fff1b8; /* ce qui se prépare */
+  --pastel-1: #fde2ec;
+  --pastel-2: #fff1b8;
+  --pastel-3: #dde7ff;
+  --pastel-4: #d8f3e6;
+  --pastel-5: #ece3ff;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --color-bg: var(--bg);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sun: var(--sun);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-title);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1 {
+  font-family: var(--font-title), var(--font-body), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+button {
+  font-family: inherit;
+}
