@@ -549,6 +549,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-11-07 | Secret étendu aux groupes : un cadeau ou une idée pour un groupe de JB, ou pour le cercle de son foyer, lui est masqué ; exception pour ce qu'il a créé lui-même | §8.10 (cercles, foyers, groupes transverses) et cadeaux reçus notés par JB |
 | 2026-11-07 | `users.person_id` non modifiable depuis l'app | Changer sa fiche liée contournerait le secret |
 | 2026-11-07 | Schéma V1 aligné sur §8.10 : `event_persons.status` (to_find, lead, found, given), cadeau chosen, to_plan, ordered, ready, given avec case `needs_pickup`, notation wow, worked, miss, catégorie d'idée en texte libre, portrait à 5 rubriques | Les décisions du prototype priment sur §11 |
+| 2026-11-07 | Import initial : groupes importés en transverses (à ranger en cercles et foyers), loved → Effet wow, ok → A marché, collection → catégorie, tout créé au nom d'Alice | Choix d'Alice ; JB ne voit donc aucun cadeau importé dont il est destinataire |
 
 ---
 
