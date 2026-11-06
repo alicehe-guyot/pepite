@@ -545,6 +545,10 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-10-30 | Feedback app → issues GitHub + analyse hebdo par Claude | Boucle d'amélioration continue |
 | 2026-10-30 | Méthodes retenues : Opportunity Solution Tree, Kano, story map | Trier le backlog quand les idées arrivent |
 | 2026-11-07 | Lien magique accepté au format `token_hash` (vérifié côté serveur) en plus du `code` PKCE | Le lien ouvert sur un autre appareil ou navigateur que celui de la demande échouait (Mail iPhone vs Mac) |
+| 2026-11-07 | Accès aux données réservé aux comptes listés dans `users` (Alice, JB) ; un compte Auth inconnu ne voit rien | L'inscription par lien magique reste ouverte côté Supabase |
+| 2026-11-07 | Secret étendu aux groupes : un cadeau ou une idée pour un groupe de JB, ou pour le cercle de son foyer, lui est masqué ; exception pour ce qu'il a créé lui-même | §8.10 (cercles, foyers, groupes transverses) et cadeaux reçus notés par JB |
+| 2026-11-07 | `users.person_id` non modifiable depuis l'app | Changer sa fiche liée contournerait le secret |
+| 2026-11-07 | Schéma V1 aligné sur §8.10 : `event_persons.status` (to_find, lead, found, given), cadeau chosen, to_plan, ordered, ready, given avec case `needs_pickup`, notation wow, worked, miss, catégorie d'idée en texte libre, portrait à 5 rubriques | Les décisions du prototype priment sur §11 |
 
 ---
 
