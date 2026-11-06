@@ -544,6 +544,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-10-30 | Ajout du mode « En magasin » | Cas réel : anniversaire oublié, passage en librairie ou magasin de jeux |
 | 2026-10-30 | Feedback app → issues GitHub + analyse hebdo par Claude | Boucle d'amélioration continue |
 | 2026-10-30 | Méthodes retenues : Opportunity Solution Tree, Kano, story map | Trier le backlog quand les idées arrivent |
+| 2026-11-07 | Lien magique accepté au format `token_hash` (vérifié côté serveur) en plus du `code` PKCE | Le lien ouvert sur un autre appareil ou navigateur que celui de la demande échouait (Mail iPhone vs Mac) |
 
 ---
 
