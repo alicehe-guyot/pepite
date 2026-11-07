@@ -1,67 +1,47 @@
-import { getAgenda, type AgendaEvent, type PersonStatus } from "@/lib/agenda";
+import { getAgenda, type AgendaEvent } from "@/lib/agenda";
 
-const dateFormat = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
+const day = new Intl.DateTimeFormat("fr-FR", { day: "numeric", timeZone: "UTC" });
+const month = new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: "UTC" });
 
 function when(daysLeft: number): string {
-  if (daysLeft === 0) return "Aujourd’hui";
+  if (daysLeft === 0) return "Auj.";
   if (daysLeft === 1) return "Demain";
-  return `Dans ${daysLeft} j`;
+  return `${daysLeft} j`;
 }
 
-// Rond vide : à trouver ; à moitié plein : piste ; plein : trouvé ; framboise : offert.
-function StatusDot({ status }: { status: PersonStatus }) {
-  const label = { to_find: "À trouver", lead: "Piste", found: "Trouvé", given: "Offert" }[status];
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label={label} className="shrink-0">
-      <circle cx="7" cy="7" r="6" fill="none" stroke={status === "given" ? "var(--accent)" : "var(--ink)"} strokeWidth="1.5" />
-      {status === "lead" && <path d="M7 1a6 6 0 0 1 0 12z" fill="var(--ink)" />}
-      {status === "found" && <circle cx="7" cy="7" r="6" fill="var(--ink)" />}
-      {status === "given" && <circle cx="7" cy="7" r="6" fill="var(--accent)" />}
-    </svg>
-  );
-}
-
-function EventCard({ event }: { event: AgendaEvent }) {
+// Une ligne compacte par événement, pensée pour l'iPhone (402 pt de large).
+function EventRow({ event }: { event: AgendaEvent }) {
   const soon = event.daysLeft <= 30;
   const many = event.persons.length > 1;
   const progress = event.persons.length ? event.found / event.persons.length : 0;
 
   return (
-    <article className={`flex flex-col gap-3 rounded-[20px] p-5 ${soon ? "bg-sun" : "bg-surface"}`}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-xl font-bold">{event.title}</h2>
-        <span className="shrink-0 text-sm font-semibold text-muted">{when(event.daysLeft)}</span>
+    <li className={`flex min-h-[64px] items-center gap-3 rounded-2xl px-3 py-2.5 ${soon ? "bg-sun" : "bg-surface"}`}>
+      <div className="flex w-10 shrink-0 flex-col items-center leading-none">
+        <span className="font-display text-[22px] font-bold">{day.format(event.date)}</span>
+        <span className="mt-0.5 text-[11px] font-semibold uppercase text-muted">
+          {month.format(event.date).replace(".", "")}
+        </span>
       </div>
-      <p className="-mt-2 text-sm text-muted first-letter:uppercase">{dateFormat.format(event.date)}</p>
 
-      {many && (
-        <>
-          <div className="flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded bg-white">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="truncate text-[16px] font-semibold">{event.title}</h2>
+          <span className="shrink-0 text-[13px] font-semibold text-muted">{when(event.daysLeft)}</span>
+        </div>
+        {many && (
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded bg-white">
               <div className="h-full rounded bg-ink" style={{ width: `${progress * 100}%` }} />
             </div>
-            <span className="text-sm font-semibold">
-              {event.found}/{event.persons.length} trouvés
+            <span className="text-[13px] font-semibold tabular-nums">
+              {event.found}/{event.persons.length}
             </span>
           </div>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2">
-            {event.persons.map((p) => (
-              <li key={p.id} className="flex items-center gap-1.5 text-[15px]">
-                <StatusDot status={p.status} />
-                {p.name}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {event.nextAction && <p className="text-[17px] font-semibold">{event.nextAction}</p>}
-    </article>
+        )}
+        {event.nextAction && <p className="truncate text-[14px] text-muted">{event.nextAction}</p>}
+      </div>
+    </li>
   );
 }
 
@@ -69,16 +49,16 @@ export default async function AgendaPage() {
   const events = await getAgenda();
 
   return (
-    <div className="flex flex-col gap-7">
-      <h1 className="text-[32px] font-bold">Agenda</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-[28px] font-bold">Agenda</h1>
       {events.length === 0 ? (
         <p className="text-muted">Rien de prévu</p>
       ) : (
-        <div className="flex flex-col gap-4">
+        <ul className="flex flex-col gap-2">
           {events.map((e) => (
-            <EventCard key={`${e.id}-${e.date.toISOString()}`} event={e} />
+            <EventRow key={`${e.id}-${e.date.toISOString()}`} event={e} />
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
