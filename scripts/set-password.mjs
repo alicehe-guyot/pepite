@@ -1,15 +1,20 @@
-// Crée un compte Pépite ou change son mot de passe. Le mot de passe est tapé ici,
-// sans s'afficher, et n'est jamais écrit dans un fichier.
-// Usage : node --env-file=.env.local scripts/set-password.mjs <email> <Prénom> [slug-de-la-fiche]
-// Exemple : node --env-file=.env.local scripts/set-password.mjs jb@exemple.fr JB jb
+// Crée un compte Pépite ou change son mot de passe. Pas d'email : le compte s'appelle
+// <prénom>@pepite.local (voir src/app/login/actions.ts) et aucun email n'est envoyé.
+// Le mot de passe est tapé ici, masqué, et n'est jamais écrit dans un fichier.
+// Chaque personne doit avoir un mot de passe différent : c'est lui qui dit qui entre.
+// Usage : node --env-file=.env.local scripts/set-password.mjs <prénom> <Nom affiché>
+// Exemple : node --env-file=.env.local scripts/set-password.mjs jb JB
+// Le compte est lié à la fiche de même slug (alice, jb) si elle existe.
 
 import readline from "node:readline";
 
-const [email, displayName, personSlug] = process.argv.slice(2);
-if (!email || !displayName) {
-  console.error("Usage : node --env-file=.env.local scripts/set-password.mjs <email> <Prénom> [slug-de-la-fiche]");
+const [account, displayName] = process.argv.slice(2);
+if (!account || !displayName) {
+  console.error("Usage : node --env-file=.env.local scripts/set-password.mjs <prénom> <Nom affiché>");
   process.exit(1);
 }
+const email = `${account.toLowerCase()}@pepite.local`;
+const personSlug = account.toLowerCase();
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY requis");
@@ -50,12 +55,8 @@ if (user) {
 }
 
 // Accès aux données (public.users) et lien vers sa fiche.
-let personId = null;
-if (personSlug) {
-  const [person] = await call("GET", `/rest/v1/persons?slug=eq.${encodeURIComponent(personSlug)}&select=id`);
-  if (!person) throw new Error(`Fiche « ${personSlug} » introuvable`);
-  personId = person.id;
-}
+const [person] = await call("GET", `/rest/v1/persons?slug=eq.${encodeURIComponent(personSlug)}&select=id`);
+const personId = person?.id ?? null;
 const row = { id: user.id, email, display_name: displayName, ...(personId && { person_id: personId }) };
 await fetch(`${url}/rest/v1/users?on_conflict=id`, {
   method: "POST",
@@ -63,4 +64,4 @@ await fetch(`${url}/rest/v1/users?on_conflict=id`, {
   body: JSON.stringify(row),
 }).then(async (r) => { if (!r.ok) throw new Error(await r.text()); });
 
-console.log(`Compte prêt : ${email} (${displayName}${personSlug ? `, fiche ${personSlug}` : ""})`);
+console.log(`Compte prêt : ${displayName}${personId ? `, lié à la fiche ${personSlug}` : ", sans fiche liée"}`);
