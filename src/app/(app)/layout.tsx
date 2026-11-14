@@ -1,4 +1,6 @@
 import { TabBar } from "@/components/TabBar";
+import { VersionWatcher } from "@/components/VersionWatcher";
+import { VERSION } from "@/lib/version";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <TabBar />
+      <VersionWatcher version={VERSION} />
     </>
   );
 }
