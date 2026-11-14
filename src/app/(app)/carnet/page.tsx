@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { ageLabel, listPersons } from "@/lib/persons";
-import { CATEGORIES, listIdeas, type Idea } from "@/lib/ideas";
-import { IdeaList } from "./idees/IdeaList";
+import { CATEGORIES, listIdeas } from "@/lib/ideas";
+import { IdeasView } from "./idees/IdeasView";
 
 const PASTELS = ["bg-[var(--pastel-1)]", "bg-[var(--pastel-2)]", "bg-[var(--pastel-3)]", "bg-[var(--pastel-4)]", "bg-[var(--pastel-5)]"];
-
-// Filtres des idées (SPEC §8.10) : catégories, plus Pistes et Sans personne.
-const FILTERS: { key: string; label: string; keep: (i: Idea) => boolean }[] = [
-  { key: "", label: "Toutes", keep: () => true },
-  { key: "pistes", label: "Pistes", keep: (i) => i.is_lead },
-  { key: "a-trier", label: "Sans personne", keep: (i) => i.recipients.length === 0 },
-  ...CATEGORIES.map((c) => ({ key: c, label: c, keep: (i: Idea) => i.category === c })),
-];
 
 function Tabs({ view }: { view: "personnes" | "idees" }) {
   const tab = (active: boolean) =>
@@ -60,30 +52,7 @@ async function Persons() {
 
 async function Ideas({ filter }: { filter: string }) {
   const ideas = await listIdeas();
-  const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0];
-  const shown = ideas.filter(active.keep);
-  return (
-    <>
-      <ul aria-label="Filtres" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-        {FILTERS.map((f) => {
-          const on = f.key === active.key;
-          const href = f.key ? `/carnet?vue=idees&filtre=${encodeURIComponent(f.key)}` : "/carnet?vue=idees";
-          return (
-            <li key={f.key || "toutes"} className="shrink-0">
-              <Link
-                href={href}
-                aria-current={on ? "true" : undefined}
-                className={`flex h-11 items-center whitespace-nowrap rounded-full px-4 text-[15px] font-semibold ${on ? "bg-ink text-white" : "bg-surface"}`}
-              >
-                {f.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      <IdeaList ideas={shown} />
-    </>
-  );
+  return <IdeasView ideas={ideas} categories={CATEGORIES} initial={filter} />;
 }
 
 export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string; filtre?: string }> }) {
