@@ -37,8 +37,9 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
   const [isLead, setIsLead] = useState(idea?.is_lead ?? false);
   // Au moins 3 champs de lien, plus à la demande (retour Alice #8).
   const saved = idea?.url ? [idea.url, ...idea.links] : [];
-  const [links, setLinks] = useState<string[]>([...saved, ...Array(Math.max(0, 3 - saved.length)).fill("")]);
-  const showLinks = Boolean(idea) || isLead;
+  // Un champ à la capture, trois sur une idée existante ou une piste ; « Ajouter un lien » pour plus.
+  const pad = (list: string[], n: number) => [...list, ...Array(Math.max(0, n - list.length)).fill("")];
+  const [links, setLinks] = useState<string[]>(pad(saved, idea ? 3 : 1));
 
   return (
     <form action={action} className="flex flex-col gap-5 md:max-w-2xl">
@@ -55,6 +56,37 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
         />
       </label>
 
+
+      <label className="flex flex-col gap-1">
+        <span className={label}>Commentaire</span>
+        <textarea
+          name="note"
+          rows={2}
+          defaultValue={idea?.note ?? ""}
+          className={`field-sizing-content min-h-[48px] resize-none ${field}`}
+        />
+      </label>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className={`${label} mb-2`}>Liens</legend>
+        {links.map((l, i) => (
+          <input
+            key={i}
+            name="link"
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            aria-label={`Lien ${i + 1}`}
+            placeholder="https://"
+            value={l}
+            onChange={(e) => setLinks(links.map((x, j) => (j === i ? e.target.value : x)))}
+            className={`h-12 ${field}`}
+          />
+        ))}
+        <button type="button" onClick={() => setLinks([...links, ""])} className="flex h-11 w-fit items-center text-[15px] font-semibold text-accent">
+          Ajouter un lien
+        </button>
+      </fieldset>
 
       <fieldset className="flex flex-col gap-2">
         <legend className={`${label} mb-2`}>Pour qui</legend>
@@ -99,41 +131,11 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
           type="checkbox"
           name="is_lead"
           checked={isLead}
-          onChange={(e) => setIsLead(e.target.checked)}
+          onChange={(e) => {
+            setIsLead(e.target.checked);
+            if (e.target.checked) setLinks(pad(links, 3));
+          }}
           className="h-6 w-6 accent-[var(--accent)]"
-        />
-      </label>
-
-      {showLinks && (
-        <fieldset className="flex flex-col gap-2">
-          <legend className={`${label} mb-2`}>Liens</legend>
-          {links.map((l, i) => (
-            <input
-              key={i}
-              name="link"
-              type="url"
-              inputMode="url"
-              autoComplete="off"
-              aria-label={`Lien ${i + 1}`}
-              placeholder="https://"
-              value={l}
-              onChange={(e) => setLinks(links.map((x, j) => (j === i ? e.target.value : x)))}
-              className={`h-12 ${field}`}
-            />
-          ))}
-          <button type="button" onClick={() => setLinks([...links, ""])} className="flex h-11 w-fit items-center text-[15px] font-semibold text-accent">
-            Ajouter un lien
-          </button>
-        </fieldset>
-      )}
-
-      <label className="flex flex-col gap-1">
-        <span className={label}>Commentaire</span>
-        <textarea
-          name="note"
-          rows={2}
-          defaultValue={idea?.note ?? ""}
-          className={`field-sizing-content min-h-[48px] resize-none ${field}`}
         />
       </label>
 
