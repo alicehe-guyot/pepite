@@ -29,6 +29,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   const share = shareText(`Idées cadeaux pour ${names.slice(0, -1).join(", ")}${names.length > 1 ? " et " : ""}${names.at(-1) ?? ""}`, [
     ...group.members.map((m) => ({
       name: m.name,
+      sizes: m.sizes,
       ideas: ideas.filter((i) => i.recipients.some((r) => r.kind === "person" && r.id === m.id)),
     })),
     ...subgroups.map((g) => ({ name: `${g.members.map((m) => m.name).join(" et ")}, ${g.members.length > 2 ? "un cadeau commun" : "un cadeau à deux"}`, ideas: forGroup(g.id) })),

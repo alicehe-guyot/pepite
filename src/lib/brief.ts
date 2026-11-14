@@ -35,6 +35,7 @@ export function buildBrief(
   const lines = [`Idée cadeau pour ${head}.`];
   if (opts.event) lines.push(`Occasion : ${opts.event.title}, le ${dateFormat.format(opts.event.date)}.`);
   if (person.budget_max) lines.push(`Budget : jusqu'à ${person.budget_max} €.`);
+  if (person.sizes) lines.push(`Tailles : ${clean(person.sizes)}.`);
   // Les notes contiennent tout le portrait (#64), une info par ligne.
   if (person.description) lines.push(...person.description.split("\n").map(clean).filter(Boolean).map((l) => `${l}.`));
   const worked = opts.gifts.filter((g) => g.rating === "wow" || g.rating === "worked");

@@ -43,6 +43,7 @@ export type Person = PersonSummary &
   Record<RubricKey, string | null> & {
     description: string | null;
     budget_max: number | null;
+    sizes: string | null;
     groups: { id: string; slug: string; name: string }[];
   };
 
@@ -86,7 +87,7 @@ export async function getPerson(slug: string): Promise<Person | null> {
   const { data, error } = await supabase
     .from("persons")
     .select(
-      `${SUMMARY}, description, budget_max, situation, passions, style, avoid, wishes,
+      `${SUMMARY}, description, budget_max, sizes, situation, passions, style, avoid, wishes,
        group_members(groups(id, slug, name))`,
     )
     .eq("slug", slug)

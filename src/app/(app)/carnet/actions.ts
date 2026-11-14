@@ -180,3 +180,13 @@ export async function setTrait(slug: string, field: "gender" | "age_group", valu
   await supabase.from("persons").update({ [field]: value && allowed.includes(value) ? value : null }).eq("slug", slug);
   revalidatePath("/carnet", "layout");
 }
+
+// Tailles et pointure (#86), en texte libre : « Taille M, pointure 42, jean 30 ».
+export async function saveSizes(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  const sizes = String(formData.get("sizes") ?? "").trim() || null;
+  const supabase = await createClient();
+  const { error } = await supabase.from("persons").update({ sizes }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  return "Enregistré";
+}
