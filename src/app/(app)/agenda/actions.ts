@@ -2,22 +2,85 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { PersonStatus } from "@/lib/agenda";
 
-const NEXT: Record<PersonStatus, PersonStatus> = { to_find: "lead", lead: "found", found: "given", given: "to_find" };
+// Parcours d'un cadeau dans un événement (#40) : À trouver → Choisi → Acheté → Prêt → Offert.
+// Les cadeaux sont créés avec un identifiant fait ici et sans relecture (voir supabase/tests/insert.test.sql).
 
-// Un tap fait avancer la personne : À trouver → Piste → Trouvé → Offert → À trouver.
-export async function cycleStatus(eventId: string, personId: string, current: PersonStatus): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("event_persons").update({ status: NEXT[current] }).eq("event_id", eventId).eq("person_id", personId);
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+const refresh = () => {
   revalidatePath("/agenda", "layout");
+  revalidatePath("/carnet", "layout");
+};
+
+// Retenir une idée : elle devient le cadeau de l'événement, pour les mêmes destinataires.
+export async function chooseIdea(eventId: string, ideaId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data: idea } = await supabase
+    .from("ideas")
+    .select("title, idea_recipients(person_id, group_id)")
+    .eq("id", ideaId)
+    .single<{ title: string; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
+  if (!idea) return "Idée introuvable";
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from("gifts").insert({ id, title: idea.title, idea_id: ideaId, event_id: eventId, status: "chosen" });
+  if (error) return "Enregistrement impossible";
+  if (idea.idea_recipients.length) {
+    const { error: e } = await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: id, ...r })));
+    if (e) return "Destinataires non enregistrés";
+  }
+  refresh();
+  return null;
+}
+
+// Retenir un cadeau qui n'était pas dans les idées.
+export async function chooseNew(eventId: string, personId: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return "Quoi ?";
+  const supabase = await createClient();
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from("gifts").insert({ id, title, event_id: eventId, status: "chosen" });
+  if (error) return "Enregistrement impossible";
+  const { error: e } = await supabase.from("gift_recipients").insert({ gift_id: id, person_id: personId });
+  if (e) return "Destinataire non enregistré";
+  refresh();
+  return null;
+}
+
+// Étape suivante : acheté (avec « à récupérer » éventuel), puis prêt.
+export async function setGiftStep(giftId: string, status: "chosen" | "ordered" | "ready", pickup?: string): Promise<string | null> {
+  const supabase = await createClient();
+  const fields = status === "ordered" ? { status, needs_pickup: Boolean(pickup), pickup_place: pickup || null } : { status };
+  const { error } = await supabase.from("gifts").update(fields).eq("id", giftId);
+  if (error) return "Enregistrement impossible";
+  refresh();
+  return null;
+}
+
+// Offert : date du jour et note (facultative, sinon « À noter »).
+export async function giveGift(giftId: string, rating: "wow" | "worked" | "miss" | null, comment = ""): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("gifts").update({ status: "given", given_on: today() }).eq("id", giftId);
+  if (error) return "Enregistrement impossible";
+  if (rating) {
+    const { error: e } = await supabase.from("gift_feedback").upsert({ gift_id: giftId, rating, comment: comment.trim() || null });
+    if (e) return "Note non enregistrée";
+  }
+  refresh();
+  return null;
+}
+
+// Changer d'avis : le cadeau est retiré, la personne repasse « À trouver » (l'idée reste dans le carnet).
+export async function dropGift(giftId: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("gifts").delete().eq("id", giftId);
+  refresh();
 }
 
 // Retire une personne de l'événement (sa fiche est gardée).
 export async function removePerson(eventId: string, personId: string): Promise<void> {
   const supabase = await createClient();
   await supabase.from("event_persons").delete().eq("event_id", eventId).eq("person_id", personId);
-  revalidatePath("/agenda", "layout");
+  refresh();
 }
 
 function slugify(name: string): string {
@@ -63,7 +126,6 @@ export async function addToEvent(eventId: string, _prev: string | null, formData
     .from("event_persons")
     .upsert(ids.map((person_id) => ({ event_id: eventId, person_id })), { onConflict: "event_id,person_id", ignoreDuplicates: true });
   if (error) return "Ajout impossible";
-  revalidatePath("/agenda", "layout");
-  if (created) revalidatePath("/carnet", "layout");
+  refresh();
   return created ? `Fiche ${name} créée et ajoutée` : group ? `${ids.length} personnes ajoutées` : `${name} ajouté`;
 }

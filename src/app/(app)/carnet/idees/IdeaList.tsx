@@ -7,7 +7,7 @@ import { RatingPicker } from "../offerts/RatingPicker";
 import { markGiven } from "./actions";
 import { DeleteButton } from "./DeleteButton";
 
-// Une ligne par idée : titre, destinataires, catégorie. Les pistes sont sur fond soleil.
+// Une ligne par idée : titre, destinataires, catégorie.
 // Coche : passer en offerte, la note est demandée tout de suite (« Plus tard » possible).
 function IdeaRow({ idea: i }: { idea: Idea }) {
   const [giving, setGiving] = useState(false);
@@ -18,13 +18,10 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
     start(async () => setError(await markGiven(i.id, rating, comment)));
 
   return (
-    <li className={`flex flex-col rounded-2xl ${i.is_lead ? "bg-sun" : "bg-surface"}`}>
+    <li className="flex flex-col rounded-2xl bg-surface">
       <div className="flex items-start">
         <Link href={`/carnet/idees/${i.id}`} className="flex min-h-[56px] min-w-0 flex-1 flex-col justify-center gap-0.5 py-2.5 pl-3">
-          <span className="flex items-baseline justify-between gap-2">
-            <span className="text-[16px] font-semibold">{i.title}</span>
-            {i.is_lead && <span className="shrink-0 text-[13px] font-semibold text-muted">Piste</span>}
-          </span>
+          <span className="text-[16px] font-semibold">{i.title}</span>
           <span className="truncate text-[14px] text-muted">{details}</span>
           {i.note && <span className="line-clamp-2 text-[14px]">{i.note}</span>}
         </Link>

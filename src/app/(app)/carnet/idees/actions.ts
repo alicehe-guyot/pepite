@@ -71,7 +71,6 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     ...linkFields,
     note: String(formData.get("note") ?? "").trim() || null,
     category,
-    is_lead: formData.get("is_lead") === "on",
     status: recipients.length ? "sorted" : "inbox",
   };
 
