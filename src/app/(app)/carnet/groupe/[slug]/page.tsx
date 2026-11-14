@@ -1,24 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
-import { getGroup } from "@/lib/groups";
-import { ideasForGroup, listIdeas, shareText } from "@/lib/ideas";
+import { getGroup, listGroups } from "@/lib/groups";
+import { listIdeas, shareText } from "@/lib/ideas";
 import { ShareButton } from "@/components/ShareButton";
 import { IdeaList } from "../../idees/IdeaList";
 import { RenameForm } from "./RenameForm";
 
 export default async function GroupPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [group, allIdeas] = await Promise.all([getGroup(slug), listIdeas()]);
+  const [group, allIdeas, groups] = await Promise.all([getGroup(slug), listIdeas(), listGroups()]);
   if (!group) notFound();
-  const ideas = ideasForGroup(allIdeas, group.id, group.members.map((m) => m.id)).filter((i) => !i.given);
+  const memberIds = group.members.map((m) => m.id);
+  // Sous-groupes : les groupes dont tous les membres sont dans celui-ci (ex. Alice & JB dans
+  // Alice & JB & Emile). Leurs idées comptent ici : un cadeau pour le couple plutôt qu'un chacun (#43).
+  const subgroups = groups.filter(
+    (g) => g.id !== group.id && g.members.length > 1 && g.members.every((m) => memberIds.includes(m.id)),
+  );
+  const groupIds = [group.id, ...subgroups.map((g) => g.id)];
+  const ideas = allIdeas
+    .filter((i) => !i.given)
+    .filter((i) => i.recipients.some((r) => (r.kind === "group" ? groupIds.includes(r.id) : memberIds.includes(r.id))));
+  const forGroup = (id: string) => ideas.filter((i) => i.recipients.some((r) => r.kind === "group" && r.id === id));
   const names = group.members.map((m) => m.name);
   const share = shareText(`Idées cadeaux pour ${names.slice(0, -1).join(", ")}${names.length > 1 ? " et " : ""}${names.at(-1) ?? ""}`, [
     ...group.members.map((m) => ({
       name: m.name,
       ideas: ideas.filter((i) => i.recipients.some((r) => r.kind === "person" && r.id === m.id)),
     })),
-    { name: "Ensemble", ideas: ideas.filter((i) => i.recipients.some((r) => r.kind === "group" && r.id === group.id)) },
+    ...subgroups.map((g) => ({ name: `${g.members.map((m) => m.name).join(" et ")}, ${g.members.length > 2 ? "un cadeau commun" : "un cadeau à deux"}`, ideas: forGroup(g.id) })),
+    { name: `${names.join(", ")}, ensemble`, ideas: forGroup(group.id) },
   ]);
 
   return (
