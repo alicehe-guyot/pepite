@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CATEGORIES, getIdea, recipientChoices } from "@/lib/ideas";
-import { archiveIdea, markGiven, unmarkGiven } from "../actions";
+import { markGiven, unmarkGiven } from "../actions";
+import { DeleteButton } from "../DeleteButton";
 import { IdeaForm } from "../IdeaForm";
 
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,11 +36,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
       <IdeaForm choices={choices} categories={CATEGORIES} idea={idea} />
 
-      <form action={archiveIdea.bind(null, idea.id)}>
-        <button type="submit" className="h-12 w-full rounded-2xl text-[16px] font-semibold text-muted">
-          Archiver
-        </button>
-      </form>
+      <DeleteButton id={idea.id} back="/carnet?vue=idees" wide />
     </div>
   );
 }
