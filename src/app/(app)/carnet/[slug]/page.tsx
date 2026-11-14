@@ -33,8 +33,10 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       {person.groups.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {person.groups.map((g) => (
-            <li key={g.id} className="rounded-full bg-surface px-3 py-1.5 text-[14px] font-semibold">
-              {g.name}
+            <li key={g.id}>
+              <Link href={`/carnet/groupe/${g.slug}`} className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[14px] font-semibold">
+                {g.name}
+              </Link>
             </li>
           ))}
         </ul>

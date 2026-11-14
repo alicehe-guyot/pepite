@@ -18,3 +18,14 @@ export async function savePortrait(slug: string, _prev: string | null, formData:
   revalidatePath(`/carnet/${slug}`);
   return "Enregistré";
 }
+
+// Renomme un groupe (ex. « Opa & Mamine »).
+export async function renameGroup(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return "Nom manquant";
+  const supabase = await createClient();
+  const { error } = await supabase.from("groups").update({ name }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  return "Enregistré";
+}
