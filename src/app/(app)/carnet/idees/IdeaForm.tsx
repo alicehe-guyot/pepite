@@ -34,10 +34,9 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
   const chosen = new Set(idea?.recipients.map((r) => `${r.kind}:${r.id}`));
   const people = choices.filter((c) => c.kind === "person");
   const groups = choices.filter((c) => c.kind === "group");
-  const [isLead, setIsLead] = useState(idea?.is_lead ?? false);
   // Au moins 3 champs de lien, plus à la demande (retour Alice #8).
   const saved = idea?.url ? [idea.url, ...idea.links] : [];
-  // Un champ à la capture, trois sur une idée existante ou une piste ; « Ajouter un lien » pour plus.
+  // Un champ à la capture, trois sur une idée existante ; « Ajouter un lien » pour plus.
   const pad = (list: string[], n: number) => [...list, ...Array(Math.max(0, n - list.length)).fill("")];
   const [links, setLinks] = useState<string[]>(pad(saved, idea ? 3 : 1));
 
@@ -125,19 +124,6 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
         </div>
       </fieldset>
 
-      <label className="flex min-h-11 items-center justify-between gap-3">
-        <span className="text-[16px] font-semibold">Piste</span>
-        <input
-          type="checkbox"
-          name="is_lead"
-          checked={isLead}
-          onChange={(e) => {
-            setIsLead(e.target.checked);
-            if (e.target.checked) setLinks(pad(links, 3));
-          }}
-          className="h-6 w-6 accent-[var(--accent)]"
-        />
-      </label>
 
       <div className="sticky bottom-24 md:bottom-4 flex items-center gap-3 bg-bg pt-1">
         <button

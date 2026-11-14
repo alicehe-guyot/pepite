@@ -9,7 +9,6 @@ import { IdeaList } from "./IdeaList";
 export type WhoOption = { key: string; label: string; kind: "person" | "group"; personIds: string[]; groupIds: string[] };
 
 const STATUSES: { key: string; label: string; keep: (i: Idea) => boolean }[] = [
-  { key: "pistes", label: "Pistes", keep: (i) => i.is_lead },
   { key: "a-trier", label: "Sans personne", keep: (i) => i.recipients.length === 0 },
 ];
 

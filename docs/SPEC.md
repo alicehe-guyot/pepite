@@ -555,6 +555,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-11-14 | Carnet > Idées et capture ＋ : un lien collé prend le titre de son aperçu Open Graph (repli : nom du site) ; une idée sans destinataire va dans « Sans personne » ; supprimer = archiver | Rendre l'app utilisable avant Noël ; rien n'est effacé par erreur |
 | 2026-11-14 | Une idée se supprime vraiment (croix sur la ligne, second tap pour confirmer), elle ne s'archive plus | Retour d'Alice (#9) |
 | 2026-11-14 | On garde les 5 rubriques du portrait pour ce qui est structuré (situation, passions, style, à éviter, envies) ; les Notes libres deviennent modifiables et vont sous le portrait | Retour d'Alice (#26), pas sûre de l'utilité des catégories : les rubriques nourrissent le brief, les notes gardent le reste |
+| 2026-11-14 | Parcours d'un cadeau dans un événement : À trouver → Choisi → Acheté → Prêt → Offert. L'avancement d'une personne et le statut d'un événement se déduisent des cadeaux rattachés ; on « retient » une idée pour l'événement. La case Piste disparaît : tout s'appelle Idées | Retours d'Alice #40 et #41 : le rond à faire tourner et la case Piste n'étaient pas clairs |
 
 ---
 
