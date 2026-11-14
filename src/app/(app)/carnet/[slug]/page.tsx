@@ -55,12 +55,6 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         value={{ day: person.birth_day, month: person.birth_month, year: person.birth_year }}
       />
 
-      {person.description && (
-        <section className="flex flex-col gap-2">
-          <h2 className="font-display text-xl font-bold">Notes</h2>
-          <p className="whitespace-pre-line rounded-xl bg-sun px-3 py-2.5 text-[15px] md:max-w-2xl">{person.description}</p>
-        </section>
-      )}
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold">Idées</h2>
         {ideas.some((i) => !i.given) && (
@@ -78,7 +72,10 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         <h2 className="font-display text-xl font-bold">Portrait</h2>
         <PortraitForm
           slug={person.slug}
-          rubrics={RUBRICS.map((r) => ({ key: r.key, label: r.label, value: person[r.key] }))}
+          rubrics={[
+            ...RUBRICS.map((r) => ({ key: r.key, label: r.label, value: person[r.key] })),
+            { key: "description", label: "Notes", value: person.description },
+          ]}
         />
       </section>
 
