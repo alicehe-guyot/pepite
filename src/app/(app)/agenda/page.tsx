@@ -100,12 +100,14 @@ async function MonthView({ month }: { month?: string }) {
 async function StatusView() {
   const events = await getStatusBoard();
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
+    // iPhone : les statuts l'un sous l'autre (plus de défilement horizontal, retour Alice #39).
+    // Ordinateur : 4 colonnes côte à côte.
+    <div className="flex flex-col gap-5 md:grid md:grid-cols-4 md:gap-3">
       {ORDER.map((k) => {
         const list = events.filter((e) => e.status === k);
         if (k === "past") list.reverse();
         return (
-          <section key={k} className="flex w-[80%] shrink-0 snap-start flex-col gap-2 md:w-auto">
+          <section key={k} className="flex flex-col gap-2">
             <h2 className="flex items-center gap-2 text-[15px] font-bold">
               <Dot status={k} />
               {STATUS[k].label}
@@ -118,7 +120,7 @@ async function StatusView() {
                 ))}
               </ul>
             ) : (
-              <p className={`rounded-2xl px-3 py-4 text-[14px] text-muted ${STATUS[k].bg}`}>Aucun</p>
+              <p className={`rounded-2xl px-3 py-3 text-[14px] text-muted ${STATUS[k].bg}`}>Aucun</p>
             )}
           </section>
         );
