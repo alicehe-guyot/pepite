@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveIdea } from "./actions";
 
 type Choice = { kind: "person" | "group"; id: string; name: string };
@@ -8,6 +8,7 @@ type Initial = {
   id: string;
   title: string;
   url: string | null;
+  links: string[];
   note: string | null;
   category: string | null;
   is_lead: boolean;
@@ -33,6 +34,11 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
   const chosen = new Set(idea?.recipients.map((r) => `${r.kind}:${r.id}`));
   const people = choices.filter((c) => c.kind === "person");
   const groups = choices.filter((c) => c.kind === "group");
+  const [isLead, setIsLead] = useState(idea?.is_lead ?? false);
+  // Au moins 3 champs de lien, plus à la demande (retour Alice #8).
+  const saved = idea?.url ? [idea.url, ...idea.links] : [];
+  const [links, setLinks] = useState<string[]>([...saved, ...Array(Math.max(0, 3 - saved.length)).fill("")]);
+  const showLinks = Boolean(idea) || isLead;
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -49,12 +55,6 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
         />
       </label>
 
-      {idea && (
-        <label className="flex flex-col gap-1">
-          <span className={label}>Lien</span>
-          <input name="url" type="url" inputMode="url" defaultValue={idea.url ?? ""} autoComplete="off" className={`h-12 ${field}`} />
-        </label>
-      )}
 
       <fieldset className="flex flex-col gap-2">
         <legend className={`${label} mb-2`}>Pour qui</legend>
@@ -95,8 +95,37 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
 
       <label className="flex min-h-11 items-center justify-between gap-3">
         <span className="text-[16px] font-semibold">Piste</span>
-        <input type="checkbox" name="is_lead" defaultChecked={idea?.is_lead} className="h-6 w-6 accent-[var(--accent)]" />
+        <input
+          type="checkbox"
+          name="is_lead"
+          checked={isLead}
+          onChange={(e) => setIsLead(e.target.checked)}
+          className="h-6 w-6 accent-[var(--accent)]"
+        />
       </label>
+
+      {showLinks && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className={`${label} mb-2`}>Liens</legend>
+          {links.map((l, i) => (
+            <input
+              key={i}
+              name="link"
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              aria-label={`Lien ${i + 1}`}
+              placeholder="https://"
+              value={l}
+              onChange={(e) => setLinks(links.map((x, j) => (j === i ? e.target.value : x)))}
+              className={`h-12 ${field}`}
+            />
+          ))}
+          <button type="button" onClick={() => setLinks([...links, ""])} className="flex h-11 w-fit items-center text-[15px] font-semibold text-accent">
+            Ajouter un lien
+          </button>
+        </fieldset>
+      )}
 
       <label className="flex flex-col gap-1">
         <span className={label}>Commentaire</span>

@@ -19,6 +19,7 @@ export type Idea = {
   id: string;
   title: string;
   url: string | null;
+  links: string[];
   note: string | null;
   category: string | null;
   is_lead: boolean;
@@ -35,7 +36,7 @@ type IdeaRow = Omit<Idea, "recipients" | "given"> & {
   }[];
 };
 
-const SELECT = `id, title, url, note, category, is_lead, created_at,
+const SELECT = `id, title, url, links, note, category, is_lead, created_at,
   idea_recipients(persons(id, slug, name), groups(id, slug, name)), gifts(status)`;
 
 // Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.

@@ -22,9 +22,15 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
       <h1 className="text-[28px] font-bold leading-tight">{idea.title}</h1>
       {idea.url && (
-        <a href={idea.url} target="_blank" rel="noreferrer" className="-mt-3 flex min-h-11 w-fit items-center truncate text-[15px] font-semibold text-accent">
-          Ouvrir le lien
-        </a>
+        <ul className="-mt-3 flex flex-wrap gap-x-4">
+          {[idea.url, ...idea.links].map((l) => (
+            <li key={l}>
+              <a href={l} target="_blank" rel="noreferrer" className="flex min-h-11 items-center text-[15px] font-semibold text-accent">
+                {new URL(l).hostname.replace(/^www\./, "")}
+              </a>
+            </li>
+          ))}
+        </ul>
       )}
 
       <form action={(idea.given ? unmarkGiven : markGiven).bind(null, idea.id)} className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-3 py-2">

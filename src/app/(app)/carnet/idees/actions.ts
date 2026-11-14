@@ -49,20 +49,26 @@ async function titleFromLink(url: URL): Promise<string> {
 // Crée (id null) ou modifie une idée, puis remplace ses destinataires.
 export async function saveIdea(id: string | null, _prev: string | null, formData: FormData): Promise<string | null> {
   const text = String(formData.get("title") ?? "").trim();
-  const linkField = formData.has("url") ? String(formData.get("url") ?? "").trim() : null;
   if (!text) return "Titre manquant";
-
   const pasted = asUrl(text);
-  // Lien : collé dans le titre, sinon le champ Lien (vidé → effacé), sinon inchangé.
-  const url = pasted ? pasted.href : linkField === null ? undefined : linkField ? (asUrl(linkField)?.href ?? null) : null;
-  if (linkField && !url) return "Lien invalide";
+
+  // Liens : celui collé dans le titre, puis les champs Liens s'ils sont affichés (sinon inchangés).
+  // Le premier va dans `url`, les autres dans `links`.
+  let linkFields: { url: string | null; links: string[] } | undefined;
+  if (formData.has("link") || pasted) {
+    const typed = formData.getAll("link").map((l) => String(l).trim()).filter(Boolean);
+    const parsed = typed.map(asUrl);
+    if (parsed.some((u) => !u)) return "Lien invalide";
+    const all = [...new Set([...(pasted ? [pasted.href] : []), ...parsed.map((u) => u!.href)])];
+    linkFields = { url: all[0] ?? null, links: all.slice(1) };
+  }
   const title = pasted ? await titleFromLink(pasted) : text;
 
   const recipients = formData.getAll("for").map(String);
   const category = String(formData.get("category") ?? "") || null;
   const fields = {
     title,
-    ...(url !== undefined && { url }),
+    ...linkFields,
     note: String(formData.get("note") ?? "").trim() || null,
     category,
     is_lead: formData.get("is_lead") === "on",
