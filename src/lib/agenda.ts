@@ -126,3 +126,54 @@ export async function getAgenda(): Promise<AgendaEvent[]> {
     .filter((e) => e.daysLeft >= 0 && e.daysLeft <= HORIZON_DAYS)
     .sort((a, b) => a.daysLeft - b.daysLeft);
 }
+
+export type EventDetail = {
+  id: string;
+  title: string;
+  date: Date;
+  daysLeft: number;
+  persons: { id: string; slug: string; name: string; status: PersonStatus }[];
+  gifts: { id: string; title: string; status: GiftRow["status"]; personIds: string[]; groupIds: string[] }[];
+};
+
+// Vue d'un événement : chaque personne avec son avancement, et les cadeaux prévus.
+export async function getEvent(id: string): Promise<EventDetail | null> {
+  const supabase = await createClient();
+  const [{ data: e, error }, { data: gifts, error: giftsError }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, title, date, recurrence, event_persons(status, persons(id, slug, name))")
+      .eq("id", id)
+      .maybeSingle<
+        Omit<EventRow, "event_persons"> & {
+          event_persons: { status: PersonStatus; persons: { id: string; slug: string; name: string } | null }[];
+        }
+      >(),
+    supabase
+      .from("gifts")
+      .select("id, title, status, gift_recipients(person_id, group_id)")
+      .eq("event_id", id)
+      .returns<
+        { id: string; title: string; status: GiftRow["status"]; gift_recipients: { person_id: string | null; group_id: string | null }[] }[]
+      >(),
+  ]);
+  if (error) throw error;
+  if (giftsError) throw giftsError;
+  if (!e) return null;
+  const today = parisToday();
+  const date = nextOccurrence(e.date, e.recurrence, today);
+  return {
+    id: e.id,
+    title: e.title,
+    date,
+    daysLeft: Math.round((date.getTime() - today.getTime()) / 86_400_000),
+    persons: e.event_persons
+      .flatMap((ep) => (ep.persons ? [{ ...ep.persons, status: ep.status }] : []))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    gifts: (gifts ?? []).map(({ gift_recipients, ...g }) => ({
+      ...g,
+      personIds: gift_recipients.flatMap((r) => (r.person_id ? [r.person_id] : [])),
+      groupIds: gift_recipients.flatMap((r) => (r.group_id ? [r.group_id] : [])),
+    })),
+  };
+}

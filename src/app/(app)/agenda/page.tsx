@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAgenda, type AgendaEvent } from "@/lib/agenda";
 
 const day = new Intl.DateTimeFormat("fr-FR", { day: "numeric", timeZone: "UTC" });
@@ -16,7 +17,8 @@ function EventRow({ event }: { event: AgendaEvent }) {
   const progress = event.persons.length ? event.found / event.persons.length : 0;
 
   return (
-    <li className={`flex min-h-[64px] items-center gap-3 rounded-2xl px-3 py-2.5 ${soon ? "bg-sun" : "bg-surface"}`}>
+    <li>
+      <Link href={`/agenda/${event.id}`} className={`flex min-h-[64px] items-center gap-3 rounded-2xl px-3 py-2.5 ${soon ? "bg-sun" : "bg-surface"}`}>
       <div className="flex w-10 shrink-0 flex-col items-center leading-none">
         <span className="font-display text-[22px] font-bold">{day.format(event.date)}</span>
         <span className="mt-0.5 text-[11px] font-semibold uppercase text-muted">
@@ -41,6 +43,7 @@ function EventRow({ event }: { event: AgendaEvent }) {
         )}
         {event.nextAction && <p className="truncate text-[14px] text-muted">{event.nextAction}</p>}
       </div>
+      </Link>
     </li>
   );
 }
