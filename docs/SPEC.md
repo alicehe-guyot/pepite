@@ -552,6 +552,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-11-07 | Import initial : groupes importés en transverses (à ranger en cercles et foyers), loved → Effet wow, ok → A marché, collection → catégorie, tout créé au nom d'Alice | Choix d'Alice ; JB ne voit donc aucun cadeau importé dont il est destinataire |
 | 2026-11-07 | Connexion par mot de passe seul, sans email ni envoi d'email : un compte interne par personne (`<prénom>@pepite.local`), un mot de passe différent par personne | Le lien et le code par email exigent un SMTP personnalisé ; l'app installée sur iPhone ne partage pas sa session avec Safari |
 | 2026-11-07 | Pour l'instant, un mot de passe commun pour tous (compte d'Alice) : tout le monde voit tout, le secret de JB est suspendu à l'écran | Choix d'Alice pour ouvrir l'app vite ; la RLS reste en place et se réactive avec un compte JB |
+| 2026-11-14 | Carnet > Idées et capture ＋ : un lien collé prend le titre de son aperçu Open Graph (repli : nom du site) ; une idée sans destinataire va dans « Sans personne » ; supprimer = archiver | Rendre l'app utilisable avant Noël ; rien n'est effacé par erreur |
 
 ---
 

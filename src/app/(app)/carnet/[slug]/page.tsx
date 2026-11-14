@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ageLabel, getPerson, RUBRICS } from "@/lib/persons";
+import { ideasFor, listIdeas } from "@/lib/ideas";
+import { IdeaList } from "../idees/IdeaList";
 import { PortraitForm } from "./PortraitForm";
 
 export default async function PersonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const person = await getPerson(slug);
+  const [person, allIdeas] = await Promise.all([getPerson(slug), listIdeas()]);
   if (!person) notFound();
+  const ideas = ideasFor(allIdeas, person.id, person.groups.map((g) => g.id));
 
   const details = [ageLabel(person), person.city].filter(Boolean).join(", ");
 
@@ -23,15 +26,15 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         <h1 className="text-[28px] font-bold leading-tight">{person.name}</h1>
         {details && <p className="text-[15px] text-muted">{details}</p>}
         <p className="text-[15px] text-muted">
-          {person.ideas} {person.ideas > 1 ? "idées" : "idée"}
+          {ideas.length} {ideas.length > 1 ? "idées" : "idée"}
         </p>
       </div>
 
       {person.groups.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {person.groups.map((g) => (
-            <li key={g} className="rounded-full bg-surface px-3 py-1.5 text-[14px] font-semibold">
-              {g}
+            <li key={g.id} className="rounded-full bg-surface px-3 py-1.5 text-[14px] font-semibold">
+              {g.name}
             </li>
           ))}
         </ul>
@@ -43,6 +46,11 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
           <p className="whitespace-pre-line rounded-xl bg-sun px-3 py-2.5 text-[15px]">{person.description}</p>
         </section>
       )}
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-bold">Idées</h2>
+        <IdeaList ideas={ideas} empty="Pas encore d'idée" />
+      </section>
+
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold">Portrait</h2>
         <PortraitForm
