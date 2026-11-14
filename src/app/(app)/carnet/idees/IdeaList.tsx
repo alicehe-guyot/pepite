@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import type { Idea } from "@/lib/ideas";
+import { Empty } from "@/components/Empty";
 import { RatingPicker } from "../offerts/RatingPicker";
 import { markGiven } from "./actions";
 import { DeleteButton } from "./DeleteButton";
@@ -50,7 +51,7 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
 }
 
 export function IdeaList({ ideas, empty = "Aucune idée" }: { ideas: Idea[]; empty?: string }) {
-  if (!ideas.length) return <p className="text-muted">{empty}</p>;
+  if (!ideas.length) return <Empty>{empty}</Empty>;
   return (
     <ul className="grid gap-2 md:grid-cols-2">
       {ideas.map((i) => (

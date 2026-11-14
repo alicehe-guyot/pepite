@@ -36,7 +36,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
     <div className="flex flex-col gap-5">
       <BackLink href="/carnet">Carnet</BackLink>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-bold leading-tight">{group.name}</h1>
+        <h1 className="text-[24px] font-bold leading-tight">{group.name}</h1>
         <p className="text-[15px] text-muted">
           {ideas.length} {ideas.length > 1 ? "idées" : "idée"}
         </p>

@@ -39,7 +39,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
     <div className="flex flex-col gap-5">
       <BackLink href="/agenda">Agenda</BackLink>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-bold leading-tight">{event.title}</h1>
+        <h1 className="text-[24px] font-bold leading-tight">{event.title}</h1>
         <p className="text-[15px] text-muted first-letter:uppercase">
           {date.format(event.date)}, {event.daysLeft === 0 ? "aujourd'hui" : event.daysLeft < 0 ? `il y a ${-event.daysLeft} j` : `dans ${event.daysLeft} j`}
         </p>
@@ -64,7 +64,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
                 replace
                 scroll={false}
                 aria-current={f === filter ? "true" : undefined}
-                className={`flex h-11 items-center whitespace-nowrap rounded-full px-4 text-[15px] font-semibold ${f === filter ? "bg-ink text-white" : "bg-surface"}`}
+                className={`flex h-11 items-center whitespace-nowrap rounded-full px-4 text-[15px] font-semibold ${f === filter ? "bg-accent text-white" : "bg-surface"}`}
               >
                 {f.label} <span className="ml-1.5 opacity-70">{event.persons.filter(f.keep).length}</span>
               </Link>

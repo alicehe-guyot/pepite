@@ -64,7 +64,7 @@ export function EventRow({ event }: { event: AgendaEvent }) {
 
 export function ViewTabs({ view }: { view: "prochains" | "mois" | "statut" }) {
   const tab = (active: boolean) =>
-    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
+    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg text-accent shadow-sm" : "text-muted"}`;
   const views = [
     { key: "prochains", label: "Prochains", href: "/agenda" },
     { key: "mois", label: "Mois", href: "/agenda?vue=mois" },

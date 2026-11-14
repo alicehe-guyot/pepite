@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTitle } from "@/components/PageTitle";
 import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
 import { listIdeas, recipientChoices } from "@/lib/ideas";
@@ -11,7 +12,7 @@ const PASTELS = ["bg-[var(--pastel-1)]", "bg-[var(--pastel-2)]", "bg-[var(--past
 
 function Tabs({ view }: { view: "personnes" | "idees" | "offerts" }) {
   const tab = (active: boolean) =>
-    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
+    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg text-accent shadow-sm" : "text-muted"}`;
   return (
     <nav aria-label="Vues du carnet" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-md">
       <Link href="/carnet" aria-current={view === "personnes" ? "page" : undefined} className={tab(view === "personnes")}>
@@ -141,7 +142,7 @@ export default async function CarnetPage({ searchParams }: { searchParams: Promi
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-[28px] font-bold">Carnet</h1>
+        <PageTitle>Carnet</PageTitle>
         <Link href="/carnet/principes" className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[15px] font-semibold">
           Mes principes
         </Link>
