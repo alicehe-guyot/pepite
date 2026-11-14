@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 // Catégories définies par Alice (SPEC §8.10, 2e retour prototype).
@@ -35,14 +36,15 @@ type IdeaRow = Omit<Idea, "recipients"> & {
 const SELECT = `id, title, url, note, category, is_lead, created_at,
   idea_recipients(persons(id, slug, name), groups(id, slug, name))`;
 
-// Fiche liée au compte connecté : affichée « Moi ».
-export async function myPersonId(): Promise<string | null> {
+// Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.
+export const myPersonId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
-  const { data } = await supabase.from("users").select("person_id").eq("id", auth.user.id).maybeSingle();
+  const { data: auth } = await supabase.auth.getClaims();
+  const uid = auth?.claims.sub;
+  if (!uid) return null;
+  const { data } = await supabase.from("users").select("person_id").eq("id", uid).maybeSingle();
   return data?.person_id ?? null;
-}
+});
 
 function toIdea(row: IdeaRow, me: string | null): Idea {
   const { idea_recipients, ...idea } = row;
