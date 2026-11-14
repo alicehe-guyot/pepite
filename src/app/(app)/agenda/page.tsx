@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTitle } from "@/components/PageTitle";
 import { eventsBetween, getAgenda, getStatusBoard, parisToday, type AgendaEvent } from "@/lib/agenda";
 import { Dot, EventRow, Legend, ORDER, STATUS, ViewTabs } from "./ui";
 
@@ -135,7 +136,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-[28px] font-bold">Agenda</h1>
+      <PageTitle>Agenda</PageTitle>
       <ViewTabs view={view} />
       {view === "mois" ? (
         <MonthView month={mois} />

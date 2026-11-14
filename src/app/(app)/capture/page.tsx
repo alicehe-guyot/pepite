@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTitle } from "@/components/PageTitle";
 import { CATEGORIES, recipientChoices } from "@/lib/ideas";
 import { IdeaForm } from "../carnet/idees/IdeaForm";
 import { GiftForm } from "../carnet/offerts/GiftForm";
@@ -10,11 +11,11 @@ export default async function CapturePage({ searchParams }: { searchParams: Prom
   const choices = await recipientChoices();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
   const tab = (active: boolean) =>
-    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
+    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg text-accent shadow-sm" : "text-muted"}`;
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-[32px] font-bold">{given ? "Déjà offert" : "Nouvelle idée"}</h1>
+      <PageTitle>{given ? "Déjà offert" : "Nouvelle idée"}</PageTitle>
       <nav aria-label="Que veux-tu ajouter" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-sm">
         <Link href="/capture" replace aria-current={!given ? "page" : undefined} className={tab(!given)}>
           Idée
