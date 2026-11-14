@@ -1,14 +1,29 @@
+import Link from "next/link";
 import { CATEGORIES, recipientChoices } from "@/lib/ideas";
 import { IdeaForm } from "../carnet/idees/IdeaForm";
+import { GiftForm } from "../carnet/offerts/GiftForm";
 
-// Saisie rapide (SPEC US-C2) : seul le titre ou le lien est requis.
-export default async function CapturePage() {
+// ＋ : une nouvelle idée (SPEC US-C2, seul le titre ou le lien est requis) ou un cadeau déjà offert (#56).
+export default async function CapturePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
+  const { type } = await searchParams;
+  const given = type === "offert";
   const choices = await recipientChoices();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const tab = (active: boolean) =>
+    `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-[32px] font-bold">Nouvelle idée</h1>
-      <IdeaForm choices={choices} categories={CATEGORIES} />
+      <h1 className="text-[32px] font-bold">{given ? "Déjà offert" : "Nouvelle idée"}</h1>
+      <nav aria-label="Que veux-tu ajouter" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-sm">
+        <Link href="/capture" replace aria-current={!given ? "page" : undefined} className={tab(!given)}>
+          Idée
+        </Link>
+        <Link href="/capture?type=offert" replace aria-current={given ? "page" : undefined} className={tab(given)}>
+          Déjà offert
+        </Link>
+      </nav>
+      {given ? <GiftForm choices={choices} today={today} /> : <IdeaForm choices={choices} categories={CATEGORIES} />}
     </div>
   );
 }
