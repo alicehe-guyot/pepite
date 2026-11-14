@@ -20,7 +20,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
         Idées
       </Link>
 
-      <h1 className="text-[28px] font-bold leading-tight">{idea.title}</h1>
+      <h1 className="text-[24px] font-bold leading-tight">{idea.title}</h1>
       {idea.url && (
         <ul className="-mt-3 flex flex-wrap gap-x-4">
           {[idea.url, ...idea.links].map((l) => (

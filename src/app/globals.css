@@ -10,10 +10,10 @@ html {
   --ink: #15171a;
   --muted: #5f646b;
   --faint: #9ca1a7;
-  --line: #eceeef;
+  --line: #f0e6e2;
   --border: #d5d8da;
-  --surface: #f3f5f3;
-  --bg: #ffffff;
+  --surface: #f8f1ee; /* sable rosé, plus chaleureux que le gris */
+  --bg: #fffbf8; /* crème */
   --accent: #c2255c; /* framboise */
   --accent-soft: #c2255c1f;
   --sun: #fff1b8; /* ce qui se prépare */
@@ -29,7 +29,7 @@ html {
   --progress-dot: #9a7b00;
   --ready: #d8f3e6;
   --ready-dot: #1e7a5a;
-  --past: #f3f5f3;
+  --past: #f1ece9;
   --past-dot: #9ca1a7;
 }
 

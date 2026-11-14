@@ -8,7 +8,7 @@ export default async function PrinciplesPage() {
   return (
     <div className="flex flex-col gap-5">
       <BackLink href="/carnet">Carnet</BackLink>
-      <h1 className="text-[28px] font-bold">Mes principes</h1>
+      <h1 className="text-[24px] font-bold">Mes principes</h1>
       <PrinciplesForm value={principles ?? ""} />
     </div>
   );

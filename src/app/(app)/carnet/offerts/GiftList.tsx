@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { GivenGift } from "@/lib/gifts";
+import { Empty } from "@/components/Empty";
 import { deleteGift, rateGift, setGiftDate } from "./actions";
 import { RATING_LABEL, RatingPicker } from "./RatingPicker";
 
@@ -78,7 +79,7 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
 
 // Cadeaux offerts : tap pour noter ou changer la note, croix pour supprimer.
 export function GiftList({ gifts, showRecipients = true, empty = "Aucun cadeau offert" }: { gifts: GivenGift[]; showRecipients?: boolean; empty?: string }) {
-  if (!gifts.length) return <p className="text-muted">{empty}</p>;
+  if (!gifts.length) return <Empty>{empty}</Empty>;
   return (
     <ul className="grid gap-2 md:grid-cols-2">
       {gifts.map((g) => (
