@@ -1,12 +1,11 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
-// Agenda (SPEC §8.3 et §8.10) : événements des 90 prochains jours, avancement par personne
-// et prochaine action générée, jamais saisie. Le secret est appliqué par la RLS :
-// les cadeaux qu'on n'a pas le droit de voir ne remontent pas ici.
+// Agenda (SPEC §8.3 et §8.10) : événements des 90 prochains jours et avancement par personne.
+// La « prochaine action » sous chaque événement a été retirée (retour Alice #24 : peu fiable).
+// Le secret est appliqué par la RLS : les cadeaux qu'on n'a pas le droit de voir ne remontent pas ici.
 
 export const HORIZON_DAYS = 90;
-const URGENT_DAYS = 30;
 
 export type PersonStatus = "to_find" | "lead" | "found" | "given";
 
@@ -17,7 +16,6 @@ export type AgendaEvent = {
   daysLeft: number;
   persons: { id: string; name: string; status: PersonStatus }[];
   found: number;
-  nextAction: string | null;
 };
 
 type EventRow = {
@@ -54,52 +52,15 @@ export function nextOccurrence(date: string, recurrence: "yearly" | "none", toda
   return next;
 }
 
-function names(list: { name: string }[], max = 2): string {
-  const shown = list.slice(0, max).map((p) => p.name);
-  const rest = list.length - shown.length;
-  return rest > 0 ? `${shown.join(", ")} et ${rest} autres` : shown.join(" et ");
-}
-
-// Règles §8.10, dans l'ordre d'urgence.
-export function nextAction(
-  persons: AgendaEvent["persons"],
-  gifts: Pick<GiftRow, "title" | "status" | "format" | "needs_pickup">[],
-  daysLeft: number,
-): string | null {
-  const activity = gifts.find((g) => (g.status === "chosen" || g.status === "to_plan") && g.format === "activity");
-  if (activity) return `Réserver ${activity.title}`;
-  const toOrder = gifts.find((g) => g.status === "chosen" && g.format !== "activity");
-  if (toOrder) return `Commander ${toOrder.title}`;
-  const pickup = gifts.find((g) => g.status === "ordered" && g.needs_pickup);
-  if (pickup) return `Récupérer ${pickup.title}`;
-
-  const toFind = persons.filter((p) => p.status === "to_find");
-  const leads = persons.filter((p) => p.status === "lead");
-  if (toFind.length && toFind.length === persons.length) return "Rien de choisi";
-  if (toFind.length && daysLeft <= URGENT_DAYS) return `Trouver pour ${names(toFind)}`;
-  if (leads.length && daysLeft <= URGENT_DAYS) return `Préciser pour ${names(leads)}`;
-  if (toFind.length) return `${toFind.length} à trouver`;
-  return null;
-}
-
 export async function getAgenda(): Promise<AgendaEvent[]> {
   const supabase = await createClient();
   const today = parisToday();
 
-  const [{ data: events, error: eventsError }, { data: gifts, error: giftsError }] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id, title, date, recurrence, event_persons(status, persons(id, name))")
-      .returns<EventRow[]>(),
-    supabase
-      .from("gifts")
-      .select("title, status, format, needs_pickup, event_id")
-      .not("event_id", "is", null)
-      .neq("status", "given")
-      .returns<GiftRow[]>(),
-  ]);
+  const { data: events, error: eventsError } = await supabase
+    .from("events")
+    .select("id, title, date, recurrence, event_persons(status, persons(id, name))")
+    .returns<EventRow[]>();
   if (eventsError) throw eventsError;
-  if (giftsError) throw giftsError;
 
   return (events ?? [])
     .map((e) => {
@@ -116,11 +77,6 @@ export async function getAgenda(): Promise<AgendaEvent[]> {
         daysLeft,
         persons,
         found: persons.filter((p) => p.status === "found" || p.status === "given").length,
-        nextAction: nextAction(
-          persons,
-          (gifts ?? []).filter((g) => g.event_id === e.id),
-          daysLeft,
-        ),
       };
     })
     .filter((e) => e.daysLeft >= 0 && e.daysLeft <= HORIZON_DAYS)

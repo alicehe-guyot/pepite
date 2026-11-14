@@ -41,7 +41,6 @@ function EventRow({ event }: { event: AgendaEvent }) {
             </span>
           </div>
         )}
-        {event.nextAction && <p className="truncate text-[14px] text-muted">{event.nextAction}</p>}
       </div>
       </Link>
     </li>
