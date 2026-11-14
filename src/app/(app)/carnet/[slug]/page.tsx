@@ -61,6 +61,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         birthday={{ label: birthdayLabel(person), day: person.birth_day, month: person.birth_month, year: person.birth_year }}
         city={person.city}
         budget={person.budget_max}
+        sizes={person.sizes}
       />
 
       <TraitChips slug={person.slug} gender={person.gender} ageGroup={person.age_group} />
@@ -82,7 +83,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       <Section
         title="Idées"
         count={ideas.length}
-        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas }])} label="Partager" small />}
+        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas, sizes: person.sizes }])} label="Partager" small />}
       >
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </Section>

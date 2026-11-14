@@ -1,12 +1,12 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
-export type Member = { id: string; slug: string; name: string };
+export type Member = { id: string; slug: string; name: string; sizes: string | null };
 export type Group = { id: string; slug: string; name: string; members: Member[] };
 
 type GroupRow = Omit<Group, "members"> & { group_members: { persons: Member | null }[] };
 
-const SELECT = "id, slug, name, group_members(persons(id, slug, name))";
+const SELECT = "id, slug, name, group_members(persons(id, slug, name, sizes))";
 
 function toGroup({ group_members, ...g }: GroupRow): Group {
   const members = group_members.flatMap((m) => (m.persons ? [m.persons] : []));

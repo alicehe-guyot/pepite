@@ -104,12 +104,12 @@ export function ideasForGroup(ideas: Idea[], groupId: string, memberIds: string[
 }
 
 // Liste à partager (WhatsApp…) : idées pas encore offertes, une section par personne.
-export function shareText(title: string, sections: { name: string; ideas: Idea[] }[]): string {
+export function shareText(title: string, sections: { name: string; ideas: Idea[]; sizes?: string | null }[]): string {
   const line = (i: Idea) =>
     [`- ${i.title}${i.note ? ` (${i.note.replace(/\s+/g, " ")})` : ""}`, ...[i.url, ...i.links].filter(Boolean).map((l) => `  ${l}`)].join("\n");
   const blocks = sections
     .map((s) => ({ ...s, ideas: s.ideas.filter((i) => !i.given) }))
     .filter((s) => s.ideas.length)
-    .map((s) => `${s.name}\n${s.ideas.map(line).join("\n")}`);
+    .map((s) => `${s.name}${s.sizes ? ` (${s.sizes.replace(/\s+/g, " ").trim()})` : ""}\n${s.ideas.map(line).join("\n")}`);
   return [title, ...blocks].join("\n\n");
 }
