@@ -95,12 +95,12 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
   redirect("/carnet?vue=idees");
 }
 
-// Archiver : l'idée sort du carnet sans être effacée (SPEC US-C3 CA2).
-export async function archiveIdea(id: string): Promise<void> {
+// Supprime l'idée (retour Alice #9 : supprimer, pas archiver). Ses cadeaux restent, sans lien vers elle.
+export async function deleteIdea(id: string, back?: string): Promise<void> {
   const supabase = await createClient();
-  await supabase.from("ideas").update({ status: "archived" }).eq("id", id);
+  await supabase.from("ideas").delete().eq("id", id);
   revalidatePath("/carnet", "layout");
-  redirect("/carnet?vue=idees");
+  if (back) redirect(back);
 }
 
 // Marque l'idée comme offerte : crée un cadeau « offert » pour les mêmes destinataires.
