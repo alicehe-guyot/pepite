@@ -70,3 +70,14 @@ export async function saveBirthday(slug: string, _prev: string | null, formData:
   revalidatePath("/agenda", "layout");
   return "Enregistré";
 }
+
+// Budget habituel pour cette personne, en euros (vide : pas de budget).
+export async function saveBudget(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  const raw = String(formData.get("budget") ?? "").replace(/[^\d]/g, "");
+  const budget = raw ? Number(raw) : null;
+  const supabase = await createClient();
+  const { error } = await supabase.from("persons").update({ budget_max: budget }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  return "Enregistré";
+}

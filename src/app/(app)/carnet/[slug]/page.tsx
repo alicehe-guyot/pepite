@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ageLabel, birthdayLabel, getPerson, MONTHS, RUBRICS } from "@/lib/persons";
 import { BirthdayForm } from "./BirthdayForm";
+import { BudgetForm } from "./BudgetForm";
 import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
 import { ShareButton } from "@/components/ShareButton";
 import { IdeaList } from "../idees/IdeaList";
@@ -54,6 +55,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         months={MONTHS}
         value={{ day: person.birth_day, month: person.birth_month, year: person.birth_year }}
       />
+      <BudgetForm slug={person.slug} value={person.budget_max} />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold">Idées</h2>
