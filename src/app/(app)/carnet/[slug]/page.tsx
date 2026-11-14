@@ -5,13 +5,17 @@ import { BirthdayForm } from "./BirthdayForm";
 import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
 import { ShareButton } from "@/components/ShareButton";
 import { IdeaList } from "../idees/IdeaList";
+import { giftsFor, listGivenGifts } from "@/lib/gifts";
+import { GiftList } from "../offerts/GiftList";
 import { PortraitForm } from "./PortraitForm";
 
 export default async function PersonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [person, allIdeas] = await Promise.all([getPerson(slug), listIdeas()]);
+  const [person, allIdeas, allGifts] = await Promise.all([getPerson(slug), listIdeas(), listGivenGifts()]);
   if (!person) notFound();
-  const ideas = ideasFor(allIdeas, person.id, person.groups.map((g) => g.id));
+  const groupIds = person.groups.map((g) => g.id);
+  const ideas = ideasFor(allIdeas, person.id, groupIds).filter((i) => !i.given);
+  const given = giftsFor(allGifts, person.id, groupIds);
 
   const details = [ageLabel(person), person.city].filter(Boolean).join(", ");
 
@@ -63,6 +67,11 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
           <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas }])} />
         )}
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-xl font-bold">Déjà offert</h2>
+        <GiftList gifts={given} empty="Rien d'offert pour l'instant" />
       </section>
 
       <section className="flex flex-col gap-3">

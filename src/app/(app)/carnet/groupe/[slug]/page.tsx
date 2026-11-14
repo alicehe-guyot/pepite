@@ -11,7 +11,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const [group, allIdeas] = await Promise.all([getGroup(slug), listIdeas()]);
   if (!group) notFound();
-  const ideas = ideasForGroup(allIdeas, group.id, group.members.map((m) => m.id));
+  const ideas = ideasForGroup(allIdeas, group.id, group.members.map((m) => m.id)).filter((i) => !i.given);
   const names = group.members.map((m) => m.name);
   const share = shareText(`Idées cadeaux pour ${names.slice(0, -1).join(", ")}${names.length > 1 ? " et " : ""}${names.at(-1) ?? ""}`, [
     ...group.members.map((m) => ({

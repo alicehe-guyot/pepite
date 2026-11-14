@@ -3,19 +3,24 @@ import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
 import { CATEGORIES, listIdeas, recipientChoices } from "@/lib/ideas";
 import { IdeasView, type WhoOption } from "./idees/IdeasView";
+import { listGivenGifts } from "@/lib/gifts";
+import { GiftList } from "./offerts/GiftList";
 
 const PASTELS = ["bg-[var(--pastel-1)]", "bg-[var(--pastel-2)]", "bg-[var(--pastel-3)]", "bg-[var(--pastel-4)]", "bg-[var(--pastel-5)]"];
 
-function Tabs({ view }: { view: "personnes" | "idees" }) {
+function Tabs({ view }: { view: "personnes" | "idees" | "offerts" }) {
   const tab = (active: boolean) =>
     `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
   return (
-    <nav aria-label="Vues du carnet" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-sm">
+    <nav aria-label="Vues du carnet" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-md">
       <Link href="/carnet" aria-current={view === "personnes" ? "page" : undefined} className={tab(view === "personnes")}>
         Personnes
       </Link>
       <Link href="/carnet?vue=idees" aria-current={view === "idees" ? "page" : undefined} className={tab(view === "idees")}>
         Idées
+      </Link>
+      <Link href="/carnet?vue=offerts" aria-current={view === "offerts" ? "page" : undefined} className={tab(view === "offerts")}>
+        Offerts
       </Link>
     </nav>
   );
@@ -101,7 +106,8 @@ async function Persons() {
 type IdeaFilters = { qui?: string; statut?: string; cat?: string };
 
 async function Ideas({ filters }: { filters: IdeaFilters }) {
-  const [ideas, choices, groups] = await Promise.all([listIdeas(), recipientChoices(), listGroups()]);
+  const [all, choices, groups] = await Promise.all([listIdeas(), recipientChoices(), listGroups()]);
+  const ideas = all.filter((i) => !i.given); // les idées offertes vivent dans Offerts
   const who: WhoOption[] = [
     ...choices
       .filter((c) => c.kind === "person")
@@ -126,13 +132,13 @@ async function Ideas({ filters }: { filters: IdeaFilters }) {
 
 export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string } & IdeaFilters> }) {
   const { vue, ...filters } = await searchParams;
-  const view = vue === "idees" ? "idees" : "personnes";
+  const view = vue === "idees" || vue === "offerts" ? vue : "personnes";
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-[28px] font-bold">Carnet</h1>
       <Tabs view={view} />
-      {view === "idees" ? <Ideas filters={filters} /> : <Persons />}
+      {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <GiftList gifts={await listGivenGifts()} /> : <Persons />}
     </div>
   );
 }

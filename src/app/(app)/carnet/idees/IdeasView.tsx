@@ -11,8 +11,6 @@ export type WhoOption = { key: string; label: string; kind: "person" | "group"; 
 const STATUSES: { key: string; label: string; keep: (i: Idea) => boolean }[] = [
   { key: "pistes", label: "Pistes", keep: (i) => i.is_lead },
   { key: "a-trier", label: "Sans personne", keep: (i) => i.recipients.length === 0 },
-  { key: "offertes", label: "Déjà offertes", keep: (i) => i.given },
-  { key: "jamais", label: "Jamais offertes", keep: (i) => !i.given },
 ];
 
 type Filters = { qui: string; statut: string; cat: string };

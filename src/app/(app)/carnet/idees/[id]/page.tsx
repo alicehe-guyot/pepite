@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CATEGORIES, getIdea, recipientChoices } from "@/lib/ideas";
-import { markGiven, unmarkGiven } from "../actions";
 import { DeleteButton } from "../DeleteButton";
 import { IdeaForm } from "../IdeaForm";
+import { GiveIdea } from "./GiveIdea";
 
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,12 +33,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
         </ul>
       )}
 
-      <form action={(idea.given ? unmarkGiven : markGiven).bind(null, idea.id)} className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-3 py-2">
-        <span className="text-[16px] font-semibold">{idea.given ? "Déjà offerte" : "Jamais offerte"}</span>
-        <button type="submit" className="h-11 rounded-xl bg-bg px-4 text-[15px] font-semibold text-accent">
-          {idea.given ? "Annuler" : "Offerte"}
-        </button>
-      </form>
+      <GiveIdea id={idea.id} given={idea.given} />
 
       <IdeaForm choices={choices} categories={CATEGORIES} idea={idea} />
 
