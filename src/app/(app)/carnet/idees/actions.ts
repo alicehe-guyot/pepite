@@ -83,9 +83,12 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     const { error: delError } = await supabase.from("idea_recipients").delete().eq("idea_id", ideaId);
     if (delError) return "Enregistrement impossible";
   } else {
-    const { data, error } = await supabase.from("ideas").insert({ ...fields, source: "manual" }).select("id").single();
-    if (error || !data) return "Enregistrement impossible";
-    ideaId = data.id;
+    // Identifiant créé ici, insertion sans relecture : la politique de lecture des idées
+    // (private.can_see_idea) relit la table et ne voit pas encore la ligne en cours d'insertion,
+    // ce qui faisait échouer tout INSERT … RETURNING (erreur 42501).
+    ideaId = crypto.randomUUID();
+    const { error } = await supabase.from("ideas").insert({ id: ideaId, ...fields, source: "manual" });
+    if (error) return "Enregistrement impossible";
   }
 
   if (recipients.length) {
@@ -111,26 +114,29 @@ export async function deleteIdea(id: string, back?: string): Promise<void> {
 
 // Marque l'idée comme offerte : crée un cadeau « offert » pour les mêmes destinataires,
 // avec la note si elle est donnée (sinon le cadeau reste « À noter », SPEC §8.10).
-export async function markGiven(id: string, rating?: "wow" | "worked" | "miss" | null, comment?: string): Promise<void> {
+export async function markGiven(id: string, rating?: "wow" | "worked" | "miss" | null, comment?: string): Promise<string | null> {
   const supabase = await createClient();
   const { data: idea } = await supabase
     .from("ideas")
     .select("title, idea_recipients(person_id, group_id)")
     .eq("id", id)
     .single<{ title: string; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
-  if (!idea) return;
-  const { data: gift } = await supabase
-    .from("gifts")
-    .insert({ title: idea.title, idea_id: id, status: "given", given_on: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date()) })
-    .select("id")
-    .single();
-  if (gift && idea.idea_recipients.length) {
-    await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: gift.id, ...r })));
+  if (!idea) return "Idée introuvable";
+  // Même raison que pour les idées : identifiant créé ici, pas de relecture à l'insertion.
+  const giftId = crypto.randomUUID();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const { error } = await supabase.from("gifts").insert({ id: giftId, title: idea.title, idea_id: id, status: "given", given_on: today });
+  if (error) return "Enregistrement impossible";
+  if (idea.idea_recipients.length) {
+    const { error: e } = await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: giftId, ...r })));
+    if (e) return "Destinataires non enregistrés";
   }
-  if (gift && rating) {
-    await supabase.from("gift_feedback").insert({ gift_id: gift.id, rating, comment: comment?.trim() || null });
+  if (rating) {
+    const { error: e } = await supabase.from("gift_feedback").insert({ gift_id: giftId, rating, comment: comment?.trim() || null });
+    if (e) return "Note non enregistrée";
   }
   revalidatePath("/carnet", "layout");
+  return null;
 }
 
 // Annule le dernier « offert » de cette idée (erreur de tap).

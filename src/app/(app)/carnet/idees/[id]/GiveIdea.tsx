@@ -8,10 +8,12 @@ import { markGiven, unmarkGiven } from "../actions";
 export function GiveIdea({ id, given }: { id: string; given: boolean }) {
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const give = (rating: "wow" | "worked" | "miss" | null, comment = "") =>
     start(async () => {
-      await markGiven(id, rating, comment);
-      setOpen(false);
+      const e = await markGiven(id, rating, comment);
+      setError(e);
+      if (!e) setOpen(false);
     });
 
   return (
@@ -28,6 +30,7 @@ export function GiveIdea({ id, given }: { id: string; given: boolean }) {
         </button>
       </div>
       {open && !given && <RatingPicker pending={pending} onRate={(r, c) => give(r, c)} onLater={() => give(null)} />}
+      {error && <span className="px-1 text-[14px] font-semibold text-accent">{error}</span>}
     </div>
   );
 }
