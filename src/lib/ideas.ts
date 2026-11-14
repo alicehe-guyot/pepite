@@ -102,3 +102,10 @@ export async function recipientChoices(): Promise<Recipient[]> {
   const families: Recipient[] = (groups.data ?? []).map((g) => ({ kind: "group" as const, ...g })).sort(byName);
   return [...people, ...families];
 }
+
+// Idées d'un groupe : pour le groupe lui-même ou pour un de ses membres.
+export function ideasForGroup(ideas: Idea[], groupId: string, memberIds: string[]): Idea[] {
+  return ideas.filter((i) =>
+    i.recipients.some((r) => (r.kind === "group" ? r.id === groupId : memberIds.includes(r.id))),
+  );
+}

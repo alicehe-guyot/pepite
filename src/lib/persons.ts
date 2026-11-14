@@ -24,7 +24,7 @@ export type PersonSummary = {
 export type Person = PersonSummary &
   Record<RubricKey, string | null> & {
     description: string | null;
-    groups: { id: string; name: string }[];
+    groups: { id: string; slug: string; name: string }[];
   };
 
 // Âge calculé, jamais saisi. Null si l'année est inconnue.
@@ -59,12 +59,12 @@ export async function getPerson(slug: string): Promise<Person | null> {
     .from("persons")
     .select(
       `${SUMMARY}, description, situation, passions, style, avoid, wishes,
-       group_members(groups(id, name))`,
+       group_members(groups(id, slug, name))`,
     )
     .eq("slug", slug)
     .maybeSingle<
       Omit<Person, "groups"> & {
-        group_members: { groups: { id: string; name: string } | null }[];
+        group_members: { groups: { id: string; slug: string; name: string } | null }[];
       }
     >();
   if (error) throw error;
