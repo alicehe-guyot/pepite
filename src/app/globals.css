@@ -58,3 +58,16 @@ h1 {
 button {
   font-family: inherit;
 }
+
+/* Retour au toucher : tout ce qui se tape réagit tout de suite (le surlignage iOS est désactivé). */
+a,
+button,
+label:has(input) {
+  transition: transform 80ms ease-out, opacity 80ms ease-out;
+}
+a:active,
+button:active,
+label:has(input):active {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
