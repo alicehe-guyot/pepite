@@ -172,3 +172,11 @@ export async function deleteGroup(slug: string): Promise<void> {
   revalidatePath("/carnet", "layout");
   redirect("/carnet");
 }
+
+// Femme ou homme, adulte ou enfant (#76). Un second tap sur la même valeur l'efface.
+export async function setTrait(slug: string, field: "gender" | "age_group", value: string | null): Promise<void> {
+  const allowed = field === "gender" ? ["female", "male"] : ["adult", "child"];
+  const supabase = await createClient();
+  await supabase.from("persons").update({ [field]: value && allowed.includes(value) ? value : null }).eq("slug", slug);
+  revalidatePath("/carnet", "layout");
+}

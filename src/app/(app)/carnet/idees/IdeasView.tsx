@@ -28,7 +28,9 @@ export function IdeasView({
   categories,
   who,
   initial,
+  traits,
 }: {
+  traits: Record<string, string[]>;
   ideas: Idea[];
   categories: readonly string[];
   who: WhoOption[];
@@ -40,10 +42,14 @@ export function IdeasView({
     (i) =>
       (!person || i.recipients.some((r) => (r.kind === "person" ? person.personIds : person.groupIds).includes(r.id))) &&
       (f.statut !== "a-trier" || i.recipients.length === 0) &&
-      (!f.cat || i.categories.includes(f.cat)),
+      (!f.cat || i.categories.includes(f.cat)) &&
+      (!f.genre || traits[i.id]?.includes(f.genre)) &&
+      (!f.age || traits[i.id]?.includes(f.age)),
   );
   const sections: FilterSection[] = [
     { key: "qui", label: "Pour qui", options: who.map((w) => ({ key: w.key, label: w.label })) },
+    { key: "genre", label: "Femme ou homme", options: [{ key: "female", label: "Femme" }, { key: "male", label: "Homme" }] },
+    { key: "age", label: "Adulte ou enfant", options: [{ key: "adult", label: "Adulte" }, { key: "child", label: "Enfant" }] },
     { key: "statut", label: "Statut", options: [{ key: "a-trier", label: "Sans personne" }] },
     { key: "cat", label: "Catégorie", options: categories.map((c) => ({ key: c, label: c })), manage: { href: "/carnet/categories", label: "Modifier" } },
   ];

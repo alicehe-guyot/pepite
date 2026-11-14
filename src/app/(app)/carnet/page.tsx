@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/PageTitle";
 import { AddInline } from "./AddInline";
 import { createGroup, createPerson } from "./actions";
-import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
+import { ageLabel, birthdayLabel, listPersons, traitsOf, TRAITS, type Trait } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
 import { listIdeas, recipientChoices } from "@/lib/ideas";
 import { listCategories } from "@/lib/categories";
@@ -49,11 +49,32 @@ function Summary({ title, count }: { title: string; count: number }) {
   );
 }
 
-async function Persons() {
-  const [persons, groups] = await Promise.all([listPersons(), listGroups()]);
-  const pastel = new Map(persons.map((p, i) => [p.id, PASTELS[i % PASTELS.length]]));
+// Filtre des personnes (#76) : Femme, Homme, Adulte, Enfant ; un tap pour activer, un second pour retirer.
+function PersonFilter({ active }: { active: Trait[] }) {
+  const href = (t: Trait) => {
+    const next = active.includes(t) ? active.filter((x) => x !== t) : [...active.filter((x) => (t === "female" || t === "male" ? x !== "female" && x !== "male" : x !== "adult" && x !== "child")), t];
+    return next.length ? `/carnet?t=${next.join(",")}` : "/carnet";
+  };
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {(Object.keys(TRAITS) as Trait[]).map((t) => (
+        <li key={t}>
+          <Link href={href(t)} replace scroll={false} aria-current={active.includes(t) ? "true" : undefined} className={`flex min-h-11 items-center rounded-full px-3.5 text-[14px] font-semibold ${active.includes(t) ? "bg-accent text-white" : "bg-surface"}`}>
+            {TRAITS[t]}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+async function Persons({ active }: { active: Trait[] }) {
+  const [everyone, groups] = await Promise.all([listPersons(), listGroups()]);
+  const persons = everyone.filter((p) => active.every((t) => p.gender === t || p.age_group === t));
+  const pastel = new Map(everyone.map((p, i) => [p.id, PASTELS[i % PASTELS.length]]));
   return (
     <>
+      <PersonFilter active={active} />
       <details open className="group/s flex flex-col">
         <Summary title="Personnes" count={persons.length} />
         <AddInline action={createPerson} placeholder="Prénom" />
@@ -109,7 +130,7 @@ async function Persons() {
   );
 }
 
-type Filters = { qui?: string; statut?: string; cat?: string; note?: string };
+type Filters = { qui?: string; statut?: string; cat?: string; note?: string; genre?: string; age?: string };
 
 // « Pour qui » : personnes (Moi d'abord) puis groupes, avec ce qu'ils couvrent.
 async function whoOptions(): Promise<WhoOption[]> {
@@ -128,19 +149,24 @@ async function whoOptions(): Promise<WhoOption[]> {
   ];
 }
 
+const initialOf = (f: Filters, keys: (keyof Filters)[]) => Object.fromEntries(keys.map((k) => [k, f[k] ?? ""]));
+
 async function Ideas({ filters }: { filters: Filters }) {
-  const [all, who, categories] = await Promise.all([listIdeas(), whoOptions(), listCategories()]);
+  const [all, who, categories, persons, groups] = await Promise.all([listIdeas(), whoOptions(), listCategories(), listPersons(), listGroups()]);
   const ideas = all.filter((i) => !i.given); // les idées offertes vivent dans Offerts
-  return <IdeasView ideas={ideas} categories={categories} who={who} initial={{ qui: filters.qui ?? "", statut: filters.statut ?? "", cat: filters.cat ?? "" }} />;
+  const traits = Object.fromEntries(ideas.map((i) => [i.id, traitsOf(i.recipients, persons, groups)]));
+  return <IdeasView ideas={ideas} categories={categories} who={who} traits={traits} initial={initialOf(filters, ["qui", "genre", "age", "statut", "cat"])} />;
 }
 
 async function Gifts({ filters }: { filters: Filters }) {
-  const [gifts, who, categories] = await Promise.all([listGivenGifts(), whoOptions(), listCategories()]);
-  return <GiftsView gifts={gifts} categories={categories} who={who} initial={{ qui: filters.qui ?? "", note: filters.note ?? "", cat: filters.cat ?? "" }} />;
+  const [gifts, who, categories, persons, groups] = await Promise.all([listGivenGifts(), whoOptions(), listCategories(), listPersons(), listGroups()]);
+  const traits = Object.fromEntries(gifts.map((g) => [g.id, traitsOf(g.recipients, persons, groups)]));
+  return <GiftsView gifts={gifts} categories={categories} who={who} traits={traits} initial={initialOf(filters, ["qui", "genre", "age", "note", "cat"])} />;
 }
 
-export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string } & Filters> }) {
-  const { vue, ...filters } = await searchParams;
+export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string; t?: string } & Filters> }) {
+  const { vue, t, ...filters } = await searchParams;
+  const active = (t ?? "").split(",").filter((x): x is Trait => x in TRAITS);
   const view = vue === "idees" || vue === "offerts" ? vue : "personnes";
 
   return (
@@ -152,7 +178,7 @@ export default async function CarnetPage({ searchParams }: { searchParams: Promi
         </Link>
       </div>
       <Tabs view={view} />
-      {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <Gifts filters={filters} /> : <Persons />}
+      {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <Gifts filters={filters} /> : <Persons active={active} />}
     </div>
   );
 }

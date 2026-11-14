@@ -19,7 +19,25 @@ export type PersonSummary = {
   birth_year: number | null;
   birth_month: number | null;
   birth_day: number | null;
+  gender: "female" | "male" | null;
+  age_group: "adult" | "child" | null;
 };
+
+// Femme ou homme, adulte ou enfant (#76).
+export const TRAITS = { female: "Femme", male: "Homme", adult: "Adulte", child: "Enfant" } as const;
+export type Trait = keyof typeof TRAITS;
+
+// Traits couverts par des destinataires : les personnes, et les membres des groupes.
+export function traitsOf(
+  recipients: { kind: "person" | "group"; id: string }[],
+  persons: Pick<PersonSummary, "id" | "gender" | "age_group">[],
+  groups: { id: string; members: { id: string }[] }[],
+): Trait[] {
+  const ids = new Set(recipients.flatMap((r) => (r.kind === "person" ? [r.id] : (groups.find((g) => g.id === r.id)?.members.map((m) => m.id) ?? []))));
+  const out = new Set<Trait>();
+  for (const p of persons) if (ids.has(p.id)) [p.gender, p.age_group].forEach((t) => t && out.add(t));
+  return [...out];
+}
 
 export type Person = PersonSummary &
   Record<RubricKey, string | null> & {
@@ -54,7 +72,7 @@ export function birthdayLabel(p: Pick<PersonSummary, "birth_month" | "birth_day"
   return p.birth_day ? `${p.birth_day === 1 ? "1er" : p.birth_day} ${month}` : month;
 }
 
-const SUMMARY = "id, slug, name, city, birth_year, birth_month, birth_day";
+const SUMMARY = "id, slug, name, city, birth_year, birth_month, birth_day, gender, age_group";
 
 export async function listPersons(): Promise<PersonSummary[]> {
   const supabase = await createClient();
