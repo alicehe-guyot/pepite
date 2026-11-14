@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ageLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
-import { CATEGORIES, listIdeas } from "@/lib/ideas";
-import { IdeasView } from "./idees/IdeasView";
+import { CATEGORIES, listIdeas, recipientChoices } from "@/lib/ideas";
+import { IdeasView, type WhoOption } from "./idees/IdeasView";
 
 const PASTELS = ["bg-[var(--pastel-1)]", "bg-[var(--pastel-2)]", "bg-[var(--pastel-3)]", "bg-[var(--pastel-4)]", "bg-[var(--pastel-5)]"];
 
@@ -85,20 +85,41 @@ async function Persons() {
   );
 }
 
-async function Ideas({ filter }: { filter: string }) {
-  const ideas = await listIdeas();
-  return <IdeasView ideas={ideas} categories={CATEGORIES} initial={filter} />;
+type IdeaFilters = { qui?: string; statut?: string; cat?: string };
+
+async function Ideas({ filters }: { filters: IdeaFilters }) {
+  const [ideas, choices, groups] = await Promise.all([listIdeas(), recipientChoices(), listGroups()]);
+  const who: WhoOption[] = [
+    ...choices
+      .filter((c) => c.kind === "person")
+      .map((p) => ({
+        key: p.slug,
+        label: p.name,
+        kind: "person" as const,
+        personIds: [p.id],
+        groupIds: groups.filter((g) => g.members.some((m) => m.id === p.id)).map((g) => g.id),
+      })),
+    ...groups.map((g) => ({ key: g.slug, label: g.name, kind: "group" as const, personIds: g.members.map((m) => m.id), groupIds: [g.id] })),
+  ];
+  return (
+    <IdeasView
+      ideas={ideas}
+      categories={CATEGORIES}
+      who={who}
+      initial={{ qui: filters.qui ?? "", statut: filters.statut ?? "", cat: filters.cat ?? "" }}
+    />
+  );
 }
 
-export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string; filtre?: string }> }) {
-  const { vue, filtre } = await searchParams;
+export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string } & IdeaFilters> }) {
+  const { vue, ...filters } = await searchParams;
   const view = vue === "idees" ? "idees" : "personnes";
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-[28px] font-bold">Carnet</h1>
       <Tabs view={view} />
-      {view === "idees" ? <Ideas filter={filtre ?? ""} /> : <Persons />}
+      {view === "idees" ? <Ideas filters={filters} /> : <Persons />}
     </div>
   );
 }

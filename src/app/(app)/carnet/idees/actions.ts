@@ -102,3 +102,37 @@ export async function archiveIdea(id: string): Promise<void> {
   revalidatePath("/carnet", "layout");
   redirect("/carnet?vue=idees");
 }
+
+// Marque l'idée comme offerte : crée un cadeau « offert » pour les mêmes destinataires.
+export async function markGiven(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: idea } = await supabase
+    .from("ideas")
+    .select("title, idea_recipients(person_id, group_id)")
+    .eq("id", id)
+    .single<{ title: string; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
+  if (!idea) return;
+  const { data: gift } = await supabase
+    .from("gifts")
+    .insert({ title: idea.title, idea_id: id, status: "given" })
+    .select("id")
+    .single();
+  if (gift && idea.idea_recipients.length) {
+    await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: gift.id, ...r })));
+  }
+  revalidatePath("/carnet", "layout");
+}
+
+// Annule le dernier « offert » de cette idée (erreur de tap).
+export async function unmarkGiven(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("gifts")
+    .select("id")
+    .eq("idea_id", id)
+    .eq("status", "given")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (data?.[0]) await supabase.from("gifts").delete().eq("id", data[0].id);
+  revalidatePath("/carnet", "layout");
+}
