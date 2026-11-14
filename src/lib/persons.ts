@@ -44,6 +44,15 @@ export function ageLabel(p: Parameters<typeof age>[0]): string | null {
   return `${a} ans`;
 }
 
+export const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+// « 2 juillet », « juillet » si le jour manque, null si le mois manque.
+export function birthdayLabel(p: Pick<PersonSummary, "birth_month" | "birth_day">): string | null {
+  if (!p.birth_month) return null;
+  const month = MONTHS[p.birth_month - 1];
+  return p.birth_day ? `${p.birth_day === 1 ? "1er" : p.birth_day} ${month}` : month;
+}
+
 const SUMMARY = "id, slug, name, city, birth_year, birth_month, birth_day";
 
 export async function listPersons(): Promise<PersonSummary[]> {
