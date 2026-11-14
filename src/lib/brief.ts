@@ -18,11 +18,11 @@ export async function myPrinciples(): Promise<string | null> {
   return data?.gift_principles ?? null;
 }
 
-// Prochain événement de la personne dans l'année (anniversaire, Noël…).
-export async function nextEventFor(personId: string): Promise<{ title: string; date: Date } | null> {
+// Événements à venir de la personne dans l'année (anniversaire, Noël…), le plus proche d'abord.
+export async function upcomingEventsFor(personId: string): Promise<{ id: string; title: string; date: Date }[]> {
   const today = parisToday();
   const events = await eventsBetween(today, new Date(today.getTime() + 366 * 86_400_000));
-  return events.find((e) => e.persons.some((p) => p.id === personId)) ?? null;
+  return events.filter((e) => e.persons.some((p) => p.id === personId));
 }
 
 // Brief pour Instinct (SPEC §8.10) : centré sur la personne, sans adresse ni nom de famille.

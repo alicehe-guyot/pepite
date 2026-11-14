@@ -136,7 +136,12 @@ export default async function CarnetPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-[28px] font-bold">Carnet</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-[28px] font-bold">Carnet</h1>
+        <Link href="/carnet/principes" className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[15px] font-semibold">
+          Mes principes
+        </Link>
+      </div>
       <Tabs view={view} />
       {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <GiftList gifts={await listGivenGifts()} /> : <Persons />}
     </div>

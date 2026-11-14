@@ -9,17 +9,22 @@ import { IdeaList } from "../idees/IdeaList";
 import { giftsFor, listGivenGifts } from "@/lib/gifts";
 import { GiftList } from "../offerts/GiftList";
 import { PortraitForm } from "./PortraitForm";
-import { buildBrief, myPrinciples, nextEventFor } from "@/lib/brief";
+import { buildBrief, myPrinciples, upcomingEventsFor } from "@/lib/brief";
+import { BriefButton } from "./BriefButton";
 
 export default async function PersonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [person, allIdeas, allGifts, principles] = await Promise.all([getPerson(slug), listIdeas(), listGivenGifts(), myPrinciples()]);
   if (!person) notFound();
-  const event = await nextEventFor(person.id);
+  const events = await upcomingEventsFor(person.id);
   const groupIds = person.groups.map((g) => g.id);
   const ideas = ideasFor(allIdeas, person.id, groupIds).filter((i) => !i.given);
   const given = giftsFor(allGifts, person.id, groupIds);
-  const brief = buildBrief(person, { ideas, gifts: given, principles, event });
+  // Un brief par événement à venir (et un sans événement) : on choisit pour lequel avant de copier.
+  const briefs = [
+    ...events.map((e) => ({ key: `${e.id}-${e.date.toISOString()}`, label: e.title, text: buildBrief(person, { ideas, gifts: given, principles, event: e }) })),
+    { key: "aucun", label: "Sans occasion", text: buildBrief(person, { ideas, gifts: given, principles, event: null }) },
+  ];
 
   const details = [ageLabel(person), person.city].filter(Boolean).join(", ");
 
@@ -61,7 +66,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       <BudgetForm slug={person.slug} value={person.budget_max} />
 
       <div className="flex flex-wrap gap-2">
-        <ShareButton text={brief} label="Copier le brief" copy />
+        <BriefButton briefs={briefs} />
       </div>
 
       <section className="flex flex-col gap-3">
