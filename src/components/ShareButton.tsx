@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-// Partage un texte (feuille de partage iOS → WhatsApp…), sinon le copie.
-export function ShareButton({ text, label = "Partager la liste" }: { text: string; label?: string }) {
+// Partage un texte (feuille de partage iOS → WhatsApp…), sinon le copie. `copy` : copie directement.
+export function ShareButton({ text, label = "Partager la liste", copy = false }: { text: string; label?: string; copy?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function share() {
-    if (navigator.share) {
+    if (!copy && navigator.share) {
       try {
         await navigator.share({ text });
         return;
