@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ageLabel, listPersons } from "@/lib/persons";
+import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
 import { CATEGORIES, listIdeas, recipientChoices } from "@/lib/ideas";
 import { IdeasView, type WhoOption } from "./idees/IdeasView";
@@ -60,7 +60,7 @@ async function Persons() {
         <h2 className="font-display text-xl font-bold">Personnes</h2>
         <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
           {persons.map((p) => {
-            const details = [ageLabel(p), p.city].filter(Boolean).join(", ");
+            const details = [ageLabel(p), birthdayLabel(p), p.city].filter(Boolean).join(", ");
             return (
               <li key={p.id}>
                 <Link href={`/carnet/${p.slug}`} className="flex min-h-[56px] items-center gap-3 py-1.5">
