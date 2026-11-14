@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { eventsBetween, getAgenda, getStatusBoard, parisToday, type AgendaEvent } from "@/lib/agenda";
 import { Dot, EventRow, Legend, ORDER, STATUS, ViewTabs } from "./ui";
+import { StatusSelect } from "./StatusSelect";
 
 const monthTitle = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -116,7 +117,10 @@ async function StatusView() {
             {list.length ? (
               <ul className="flex flex-col gap-2">
                 {list.map((e) => (
-                  <EventRow key={`${e.id}-${e.date.toISOString()}`} event={e} />
+                  <div key={`${e.id}-${e.date.toISOString()}`} className="flex flex-col gap-1">
+                    <EventRow event={e} />
+                    <StatusSelect eventId={e.id} occurrence={e.date.toISOString().slice(0, 10)} status={e.status} auto={e.auto} />
+                  </div>
                 ))}
               </ul>
             ) : (
