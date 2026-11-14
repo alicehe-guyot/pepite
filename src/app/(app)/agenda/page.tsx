@@ -76,7 +76,22 @@ async function MonthView({ month }: { month?: string }) {
         })}
       </div>
       <Legend />
-      <EventList events={events} empty="Rien ce mois-ci" />
+      {/* Le détail est dans Prochains (retour Alice #38) : ici, seulement les titres du mois. */}
+      {events.length === 0 ? (
+        <p className="text-muted">Rien ce mois-ci</p>
+      ) : (
+        <ul className="flex flex-col">
+          {events.map((e) => (
+            <li key={`${e.id}-${e.date.toISOString()}`}>
+              <Link href={`/agenda/${e.id}`} className="flex min-h-11 items-center gap-3 text-[15px]">
+                <span className="w-6 text-right font-semibold tabular-nums">{e.date.getUTCDate()}</span>
+                <Dot status={e.status} />
+                <span className="truncate">{e.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   );
 }
