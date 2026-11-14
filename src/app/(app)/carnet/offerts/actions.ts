@@ -14,6 +14,13 @@ export async function rateGift(giftId: string, rating: Rating, comment: string):
   revalidatePath("/carnet", "layout");
 }
 
+// Date à laquelle le cadeau a été offert (vide : inconnue).
+export async function setGiftDate(giftId: string, date: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("gifts").update({ given_on: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null }).eq("id", giftId);
+  revalidatePath("/carnet", "layout");
+}
+
 // Supprime un cadeau offert (erreur de saisie).
 export async function deleteGift(giftId: string): Promise<void> {
   const supabase = await createClient();
