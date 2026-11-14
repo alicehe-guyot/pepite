@@ -2,16 +2,6 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-// Catégories définies par Alice (SPEC §8.10, 2e retour prototype).
-export const CATEGORIES = [
-  "Naissance",
-  "Enfants / jouets",
-  "Activités",
-  "Grossesse / parents",
-  "Librairie",
-  "Secret Santa",
-  "Anniversaire ami",
-] as const;
 
 export type Recipient = { kind: "person" | "group"; id: string; slug: string; name: string };
 
@@ -21,7 +11,7 @@ export type Idea = {
   url: string | null;
   links: string[];
   note: string | null;
-  category: string | null;
+  categories: string[];
   is_lead: boolean;
   created_at: string;
   recipients: Recipient[];
@@ -36,7 +26,7 @@ type IdeaRow = Omit<Idea, "recipients" | "given"> & {
   }[];
 };
 
-const SELECT = `id, title, url, links, note, category, is_lead, created_at,
+const SELECT = `id, title, url, links, note, categories, is_lead, created_at,
   idea_recipients(persons(id, slug, name), groups(id, slug, name)), gifts(status)`;
 
 // Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.

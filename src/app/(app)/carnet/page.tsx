@@ -2,10 +2,11 @@ import Link from "next/link";
 import { PageTitle } from "@/components/PageTitle";
 import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
-import { CATEGORIES, listIdeas, recipientChoices } from "@/lib/ideas";
+import { listIdeas, recipientChoices } from "@/lib/ideas";
+import { listCategories } from "@/lib/categories";
 import { IdeasView, type WhoOption } from "./idees/IdeasView";
 import { listGivenGifts } from "@/lib/gifts";
-import { GiftList } from "./offerts/GiftList";
+import { GiftsView } from "./offerts/GiftsView";
 
 const PASTELS = ["bg-[var(--pastel-1)]", "bg-[var(--pastel-2)]", "bg-[var(--pastel-3)]", "bg-[var(--pastel-4)]", "bg-[var(--pastel-5)]"];
 
@@ -104,12 +105,12 @@ async function Persons() {
   );
 }
 
-type IdeaFilters = { qui?: string; statut?: string; cat?: string };
+type Filters = { qui?: string; statut?: string; cat?: string; note?: string };
 
-async function Ideas({ filters }: { filters: IdeaFilters }) {
-  const [all, choices, groups] = await Promise.all([listIdeas(), recipientChoices(), listGroups()]);
-  const ideas = all.filter((i) => !i.given); // les idées offertes vivent dans Offerts
-  const who: WhoOption[] = [
+// « Pour qui » : personnes (Moi d'abord) puis groupes, avec ce qu'ils couvrent.
+async function whoOptions(): Promise<WhoOption[]> {
+  const [choices, groups] = await Promise.all([recipientChoices(), listGroups()]);
+  return [
     ...choices
       .filter((c) => c.kind === "person")
       .map((p) => ({
@@ -121,17 +122,20 @@ async function Ideas({ filters }: { filters: IdeaFilters }) {
       })),
     ...groups.map((g) => ({ key: g.slug, label: g.name, kind: "group" as const, personIds: g.members.map((m) => m.id), groupIds: [g.id] })),
   ];
-  return (
-    <IdeasView
-      ideas={ideas}
-      categories={CATEGORIES}
-      who={who}
-      initial={{ qui: filters.qui ?? "", statut: filters.statut ?? "", cat: filters.cat ?? "" }}
-    />
-  );
 }
 
-export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string } & IdeaFilters> }) {
+async function Ideas({ filters }: { filters: Filters }) {
+  const [all, who, categories] = await Promise.all([listIdeas(), whoOptions(), listCategories()]);
+  const ideas = all.filter((i) => !i.given); // les idées offertes vivent dans Offerts
+  return <IdeasView ideas={ideas} categories={categories} who={who} initial={{ qui: filters.qui ?? "", statut: filters.statut ?? "", cat: filters.cat ?? "" }} />;
+}
+
+async function Gifts({ filters }: { filters: Filters }) {
+  const [gifts, who, categories] = await Promise.all([listGivenGifts(), whoOptions(), listCategories()]);
+  return <GiftsView gifts={gifts} categories={categories} who={who} initial={{ qui: filters.qui ?? "", note: filters.note ?? "", cat: filters.cat ?? "" }} />;
+}
+
+export default async function CarnetPage({ searchParams }: { searchParams: Promise<{ vue?: string } & Filters> }) {
   const { vue, ...filters } = await searchParams;
   const view = vue === "idees" || vue === "offerts" ? vue : "personnes";
 
@@ -144,7 +148,7 @@ export default async function CarnetPage({ searchParams }: { searchParams: Promi
         </Link>
       </div>
       <Tabs view={view} />
-      {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <GiftList gifts={await listGivenGifts()} /> : <Persons />}
+      {view === "idees" ? <Ideas filters={filters} /> : view === "offerts" ? <Gifts filters={filters} /> : <Persons />}
     </div>
   );
 }

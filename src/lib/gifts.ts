@@ -9,6 +9,7 @@ export type GivenGift = {
   occasion: string | null; // événement ou libellé importé
   year: number | null; // année de l'événement, si connue
   givenOn: string | null; // date offerte (AAAA-MM-JJ), si connue
+  categories: string[]; // les siennes, plus celles de l'idée d'origine
   rating: Rating | null; // null : à noter
   comment: string | null;
   recipients: { kind: "person" | "group"; id: string; name: string }[];
@@ -19,6 +20,8 @@ type Row = {
   title: string;
   event_label: string | null;
   given_on: string | null;
+  categories: string[];
+  ideas: { categories: string[] } | null;
   events: { title: string; date: string; recurrence: string } | null;
   gift_feedback: { rating: Rating; comment: string | null } | null;
   gift_recipients: { persons: { id: string; name: string } | null; groups: { id: string; name: string } | null }[];
@@ -30,7 +33,7 @@ export async function listGivenGifts(): Promise<GivenGift[]> {
   const { data, error } = await supabase
     .from("gifts")
     .select(
-      "id, title, event_label, given_on, created_at, events(title, date, recurrence), gift_feedback(rating, comment), gift_recipients(persons(id, name), groups(id, name))",
+      "id, title, event_label, given_on, categories, ideas(categories), created_at, events(title, date, recurrence), gift_feedback(rating, comment), gift_recipients(persons(id, name), groups(id, name))",
     )
     .eq("status", "given")
     .order("created_at", { ascending: false })
@@ -43,6 +46,7 @@ export async function listGivenGifts(): Promise<GivenGift[]> {
       occasion: g.events?.title ?? g.event_label,
       year: g.events && g.events.recurrence === "none" ? Number(g.events.date.slice(0, 4)) : null,
       givenOn: g.given_on,
+      categories: [...new Set([...g.categories, ...(g.ideas?.categories ?? [])])],
       rating: g.gift_feedback?.rating ?? null,
       comment: g.gift_feedback?.comment ?? null,
       recipients: g.gift_recipients.flatMap((r): GivenGift["recipients"] =>

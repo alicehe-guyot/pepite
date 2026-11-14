@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CATEGORIES, getIdea, recipientChoices } from "@/lib/ideas";
+import { listCategories } from "@/lib/categories";
+import { getIdea, recipientChoices } from "@/lib/ideas";
 import { DeleteButton } from "../DeleteButton";
 import { IdeaForm } from "../IdeaForm";
 import { GiveIdea } from "./GiveIdea";
@@ -8,7 +9,7 @@ import { GiveIdea } from "./GiveIdea";
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const [idea, choices] = await Promise.all([getIdea(id), recipientChoices()]);
+  const [idea, choices, categories] = await Promise.all([getIdea(id), recipientChoices(), listCategories()]);
   if (!idea) notFound();
 
   return (
@@ -35,7 +36,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
       <GiveIdea id={idea.id} given={idea.given} />
 
-      <IdeaForm choices={choices} categories={CATEGORIES} idea={idea} />
+      <IdeaForm choices={choices} categories={categories} idea={idea} />
 
       <DeleteButton id={idea.id} back="/carnet?vue=idees" wide />
     </div>

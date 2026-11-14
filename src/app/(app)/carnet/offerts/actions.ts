@@ -22,6 +22,13 @@ export async function setGiftDate(giftId: string, date: string): Promise<void> {
   revalidatePath("/carnet", "layout");
 }
 
+// Catégories d'un cadeau offert.
+export async function setGiftCategories(giftId: string, categories: string[]): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("gifts").update({ categories }).eq("id", giftId);
+  revalidatePath("/carnet", "layout");
+}
+
 // Supprime un cadeau offert (erreur de saisie).
 export async function deleteGift(giftId: string): Promise<void> {
   const supabase = await createClient();
@@ -48,6 +55,7 @@ export async function addGivenGift(_prev: string | null, formData: FormData): Pr
     status: "given",
     given_on: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
     event_label: String(formData.get("occasion") ?? "").trim() || null,
+    categories: [...new Set(formData.getAll("categories").map(String).filter(Boolean))],
   });
   if (error) return "Enregistrement impossible";
   const { error: rError } = await supabase.from("gift_recipients").insert(

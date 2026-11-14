@@ -65,12 +65,12 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
   const title = pasted ? await titleFromLink(pasted) : text;
 
   const recipients = formData.getAll("for").map(String);
-  const category = String(formData.get("category") ?? "") || null;
+  const categories = [...new Set(formData.getAll("categories").map(String).filter(Boolean))];
   const fields = {
     title,
     ...linkFields,
     note: String(formData.get("note") ?? "").trim() || null,
-    category,
+    categories,
     status: recipients.length ? "sorted" : "inbox",
   };
 

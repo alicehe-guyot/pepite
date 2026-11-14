@@ -14,7 +14,7 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
   const [giving, setGiving] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const details = [i.recipients.map((r) => r.name).join(", ") || "À trier", i.category].filter(Boolean).join(", ");
+  const details = [i.recipients.map((r) => r.name).join(", ") || "À trier", ...i.categories].join(", ");
   const give = (rating: "wow" | "worked" | "miss" | null, comment = "") =>
     start(async () => setError(await markGiven(i.id, rating, comment)));
 

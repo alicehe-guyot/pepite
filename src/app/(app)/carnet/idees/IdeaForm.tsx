@@ -10,7 +10,7 @@ type Initial = {
   url: string | null;
   links: string[];
   note: string | null;
-  category: string | null;
+  categories: string[];
   is_lead: boolean;
   recipients: { kind: "person" | "group"; id: string }[];
 };
@@ -106,21 +106,13 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className={`${label} mb-2`}>Catégorie</legend>
+        <legend className={`${label} mb-2`}>Catégories</legend>
         <div className="flex flex-wrap gap-2">
-          <Chip type="radio" name="category" value="" checked={!idea?.category}>
-            Aucune
-          </Chip>
-          {categories.map((c) => (
-            <Chip key={c} type="radio" name="category" value={c} checked={idea?.category === c}>
+          {[...new Set([...categories, ...(idea?.categories ?? [])])].map((c) => (
+            <Chip key={c} type="checkbox" name="categories" value={c} checked={idea?.categories.includes(c) ?? false}>
               {c}
             </Chip>
           ))}
-          {idea?.category && !categories.includes(idea.category) && (
-            <Chip type="radio" name="category" value={idea.category} checked>
-              {idea.category}
-            </Chip>
-          )}
         </div>
       </fieldset>
 
