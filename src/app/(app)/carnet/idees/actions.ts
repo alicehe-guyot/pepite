@@ -109,8 +109,9 @@ export async function deleteIdea(id: string, back?: string): Promise<void> {
   if (back) redirect(back);
 }
 
-// Marque l'idée comme offerte : crée un cadeau « offert » pour les mêmes destinataires.
-export async function markGiven(id: string): Promise<void> {
+// Marque l'idée comme offerte : crée un cadeau « offert » pour les mêmes destinataires,
+// avec la note si elle est donnée (sinon le cadeau reste « À noter », SPEC §8.10).
+export async function markGiven(id: string, rating?: "wow" | "worked" | "miss" | null, comment?: string): Promise<void> {
   const supabase = await createClient();
   const { data: idea } = await supabase
     .from("ideas")
@@ -125,6 +126,9 @@ export async function markGiven(id: string): Promise<void> {
     .single();
   if (gift && idea.idea_recipients.length) {
     await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: gift.id, ...r })));
+  }
+  if (gift && rating) {
+    await supabase.from("gift_feedback").insert({ gift_id: gift.id, rating, comment: comment?.trim() || null });
   }
   revalidatePath("/carnet", "layout");
 }
