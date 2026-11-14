@@ -4,7 +4,9 @@ import { BackLink } from "@/components/BackLink";
 import { getEvent, type PersonStatus } from "@/lib/agenda";
 import { listGroups } from "@/lib/groups";
 import { ideasFor, listIdeas } from "@/lib/ideas";
-import { cycleStatus } from "../actions";
+import { cycleStatus, removePerson } from "../actions";
+import { listPersons } from "@/lib/persons";
+import { AddPerson } from "./AddPerson";
 
 const LABEL: Record<PersonStatus, string> = { to_find: "À trouver", lead: "Piste", found: "Trouvé", given: "Offert" };
 const GIFT: Record<string, string> = { chosen: "Choisi", to_plan: "À planifier", ordered: "Commandé", ready: "Prêt", given: "Offert" };
@@ -24,8 +26,10 @@ function StatusDot({ status }: { status: PersonStatus }) {
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const [event, ideas, groups] = await Promise.all([getEvent(id), listIdeas(), listGroups()]);
+  const [event, ideas, groups, people] = await Promise.all([getEvent(id), listIdeas(), listGroups(), listPersons()]);
   if (!event) notFound();
+  const inEvent = new Set(event.persons.map((p) => p.id));
+  const suggestions = [...people.filter((p) => !inEvent.has(p.id)).map((p) => p.name), ...groups.map((g) => g.name)];
   const done = event.persons.filter((p) => p.status === "found" || p.status === "given").length;
 
   return (
@@ -34,7 +38,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
       <div className="flex flex-col gap-1">
         <h1 className="text-[28px] font-bold leading-tight">{event.title}</h1>
         <p className="text-[15px] text-muted first-letter:uppercase">
-          {date.format(event.date)}, {event.daysLeft === 0 ? "aujourd'hui" : `dans ${event.daysLeft} j`}
+          {date.format(event.date)}, {event.daysLeft === 0 ? "aujourd'hui" : event.daysLeft < 0 ? `il y a ${-event.daysLeft} j` : `dans ${event.daysLeft} j`}
         </p>
         {event.persons.length > 1 && (
           <p className="text-[15px] font-semibold">
@@ -49,7 +53,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           const stock = ideasFor(ideas, p.id, myGroups).filter((i) => !i.given).length;
           const gifts = event.gifts.filter((g) => g.personIds.includes(p.id) || g.groupIds.some((gid) => myGroups.includes(gid)));
           return (
-            <li key={p.id} className={`flex items-center gap-1 rounded-2xl pr-3 ${p.status === "lead" ? "bg-sun" : "bg-surface"}`}>
+            <li key={p.id} className={`flex items-center gap-1 rounded-2xl ${p.status === "lead" ? "bg-sun" : "bg-surface"}`}>
               <form action={cycleStatus.bind(null, event.id, p.id, p.status)}>
                 <button type="submit" aria-label={`${p.name} : ${LABEL[p.status]}, passer à l'étape suivante`} className="flex h-14 w-14 items-center justify-center">
                   <StatusDot status={p.status} />
@@ -71,10 +75,19 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                   </span>
                 )}
               </Link>
+              <form action={removePerson.bind(null, event.id, p.id)}>
+                <button type="submit" aria-label={`Retirer ${p.name}`} className="flex h-14 w-11 items-center justify-center text-faint">
+                  <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M2 2l10 10M12 2L2 12" />
+                  </svg>
+                </button>
+              </form>
             </li>
           );
         })}
       </ul>
+
+      <AddPerson eventId={event.id} suggestions={suggestions} />
     </div>
   );
 }
