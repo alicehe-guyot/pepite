@@ -25,7 +25,7 @@ export function DeleteButton({ id, title, back, wide }: { id: string; title?: st
         type="button"
         onClick={onClick}
         disabled={pending}
-        className={`h-12 w-full rounded-2xl text-[16px] font-semibold ${armed ? "bg-accent text-white" : "text-muted"}`}
+        className={`h-12 w-full rounded-2xl md:max-w-2xl text-[16px] font-semibold ${armed ? "bg-accent text-white" : "text-muted"}`}
       >
         {armed ? "Confirmer" : "Supprimer"}
       </button>

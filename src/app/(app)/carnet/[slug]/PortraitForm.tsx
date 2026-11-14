@@ -9,7 +9,7 @@ export function PortraitForm({ slug, rubrics }: { slug: string; rubrics: Rubric[
   const [message, action, pending] = useActionState(savePortrait.bind(null, slug), null);
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action} className="flex flex-col gap-3 md:max-w-2xl">
       {rubrics.map((r) => (
         <label key={r.key} className="flex flex-col gap-1">
           <span className="text-[13px] font-semibold uppercase tracking-wide text-muted">{r.label}</span>
@@ -22,7 +22,7 @@ export function PortraitForm({ slug, rubrics }: { slug: string; rubrics: Rubric[
           />
         </label>
       ))}
-      <div className="sticky bottom-24 flex items-center gap-3 pt-1">
+      <div className="sticky bottom-24 md:bottom-4 flex items-center gap-3 pt-1">
         <button
           type="submit"
           disabled={pending}

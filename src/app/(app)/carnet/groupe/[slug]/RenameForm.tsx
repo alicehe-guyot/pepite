@@ -6,7 +6,7 @@ import { renameGroup } from "../../actions";
 export function RenameForm({ slug, name }: { slug: string; name: string }) {
   const [message, action, pending] = useActionState(renameGroup.bind(null, slug), null);
   return (
-    <form action={action} className="flex flex-col gap-1">
+    <form action={action} className="flex flex-col gap-1 md:max-w-md">
       <label htmlFor="group-name" className="text-[13px] font-semibold uppercase tracking-wide text-muted">
         Nom du groupe
       </label>

@@ -43,7 +43,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         )}
       </div>
 
-      <ul className="flex flex-col gap-2">
+      <ul className="grid gap-2 md:grid-cols-2">
         {event.persons.map((p) => {
           const myGroups = groups.filter((g) => g.members.some((m) => m.id === p.id)).map((g) => g.id);
           const stock = ideasFor(ideas, p.id, myGroups).filter((i) => !i.given).length;
