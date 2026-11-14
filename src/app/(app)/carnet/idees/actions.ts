@@ -48,8 +48,9 @@ async function titleFromLink(url: URL): Promise<string> {
 
 // Crée (id null) ou modifie une idée, puis remplace ses destinataires.
 export async function saveIdea(id: string | null, _prev: string | null, formData: FormData): Promise<string | null> {
+  // En modification, le titre se change sur place (#75) : le formulaire ne l'envoie plus.
   const text = String(formData.get("title") ?? "").trim();
-  if (!text) return "Titre manquant";
+  if (!id && !text) return "Titre manquant";
   const pasted = asUrl(text);
 
   // Liens : celui collé dans le titre, puis les champs Liens s'ils sont affichés (sinon inchangés).
@@ -62,12 +63,12 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     const all = [...new Set([...(pasted ? [pasted.href] : []), ...parsed.map((u) => u!.href)])];
     linkFields = { url: all[0] ?? null, links: all.slice(1) };
   }
-  const title = pasted ? await titleFromLink(pasted) : text;
+  const title = pasted ? await titleFromLink(pasted) : text || undefined;
 
   const recipients = formData.getAll("for").map(String);
   const categories = [...new Set(formData.getAll("categories").map(String).filter(Boolean))];
   const fields = {
-    title,
+    ...(title && { title }),
     ...linkFields,
     note: String(formData.get("note") ?? "").trim() || null,
     categories,
@@ -150,4 +151,13 @@ export async function unmarkGiven(id: string): Promise<void> {
     .limit(1);
   if (data?.[0]) await supabase.from("gifts").delete().eq("id", data[0].id);
   revalidatePath("/carnet", "layout");
+}
+
+// Renommer une idée depuis son titre (#75).
+export async function renameIdea(id: string, title: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("ideas").update({ title: title.trim() }).eq("id", id);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  return null;
 }

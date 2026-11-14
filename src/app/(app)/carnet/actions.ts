@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 // Enregistre le portrait (5 rubriques). Une rubrique vidée redevient « à compléter ».
@@ -84,4 +85,90 @@ export async function saveBudget(slug: string, _prev: string | null, formData: F
   if (error) return "Enregistrement impossible";
   revalidatePath("/carnet", "layout");
   return "Enregistré";
+}
+
+function slugify(name: string): string {
+  return (
+    name
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "fiche"
+  );
+}
+
+async function freeSlug(table: "persons" | "groups", name: string): Promise<string> {
+  const supabase = await createClient();
+  const base = slugify(name);
+  const { data } = await supabase.from(table).select("slug").like("slug", `${base}%`);
+  const taken = new Set((data ?? []).map((r) => r.slug));
+  let slug = base;
+  for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
+  return slug;
+}
+
+// Renommer une personne (le lien de sa fiche ne change pas).
+export async function renamePerson(slug: string, name: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("persons").update({ name: name.trim() }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  revalidatePath("/agenda", "layout");
+  return null;
+}
+
+export async function renameGroupTo(slug: string, name: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("groups").update({ name: name.trim() }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
+  return null;
+}
+
+// Créer une personne ou un groupe depuis le Carnet (#77), puis ouvrir sa page.
+export async function createPerson(_prev: string | null, formData: FormData): Promise<string | null> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return null;
+  const supabase = await createClient();
+  const slug = await freeSlug("persons", name);
+  const { error } = await supabase.from("persons").insert({ name, slug });
+  if (error) return "Création impossible";
+  revalidatePath("/carnet", "layout");
+  redirect(`/carnet/${slug}`);
+}
+
+export async function createGroup(_prev: string | null, formData: FormData): Promise<string | null> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return null;
+  const supabase = await createClient();
+  const slug = await freeSlug("groups", name);
+  const { error } = await supabase.from("groups").insert({ name, slug, kind: "transverse" });
+  if (error) return "Création impossible";
+  revalidatePath("/carnet", "layout");
+  redirect(`/carnet/groupe/${slug}`);
+}
+
+// Membres d'un groupe : ajouter ou retirer une personne.
+export async function toggleMember(groupId: string, personId: string, member: boolean): Promise<void> {
+  const supabase = await createClient();
+  if (member) await supabase.from("group_members").delete().eq("group_id", groupId).eq("person_id", personId);
+  else await supabase.from("group_members").insert({ group_id: groupId, person_id: personId });
+  revalidatePath("/carnet", "layout");
+}
+
+// Supprimer une fiche ou un groupe : ses idées et cadeaux restent, sans ce destinataire.
+export async function deletePerson(slug: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("persons").delete().eq("slug", slug);
+  revalidatePath("/carnet", "layout");
+  revalidatePath("/agenda", "layout");
+  redirect("/carnet");
+}
+
+export async function deleteGroup(slug: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("groups").delete().eq("slug", slug);
+  revalidatePath("/carnet", "layout");
+  redirect("/carnet");
 }
