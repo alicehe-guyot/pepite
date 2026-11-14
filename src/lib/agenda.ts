@@ -52,6 +52,8 @@ type EventRow = {
   title: string;
   date: string;
   recurrence: "yearly" | "none";
+  status_override: "todo" | "progress" | "ready" | null;
+  status_override_on: string | null;
   event_persons: { persons: { id: string; slug: string; name: string } | null }[];
   gifts: {
     id: string;
@@ -114,7 +116,7 @@ async function load(eventId?: string): Promise<Loaded> {
   let query = supabase
     .from("events")
     .select(
-      `id, title, date, recurrence, event_persons(persons(id, slug, name)),
+      `id, title, date, recurrence, status_override, status_override_on, event_persons(persons(id, slug, name)),
        gifts(id, title, status, needs_pickup, pickup_place, created_at, gift_recipients(person_id, group_id))`,
     );
   if (eventId) query = query.eq("id", eventId);
@@ -149,10 +151,13 @@ function toAgendaEvent(e: EventRow, date: Date, today: Date, groupsOf: Map<strin
     .flatMap((ep) => (ep.persons ? [ep.persons] : []))
     .map((p) => ({ ...p, ...personStep(p.id, groupsOf.get(p.id) ?? [], gifts) }))
     .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  const status = eventStatus(
+  const auto = eventStatus(
     persons.map((p) => p.step),
     daysLeft,
   );
+  // Déplacé à la main (#39) : vaut pour cette occurrence seulement, et jamais pour un événement passé.
+  const iso = date.toISOString().slice(0, 10);
+  const status = auto !== "past" && e.status_override && e.status_override_on === iso ? e.status_override : auto;
   return {
     id: e.id,
     title: e.title,
@@ -161,7 +166,7 @@ function toAgendaEvent(e: EventRow, date: Date, today: Date, groupsOf: Map<strin
     persons,
     found: persons.filter((p) => p.step === "ready" || p.step === "given").length,
     status,
-    auto: status,
+    auto,
   };
 }
 

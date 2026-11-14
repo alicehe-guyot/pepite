@@ -6,6 +6,7 @@ import { listGroups } from "@/lib/groups";
 import { ideasFor, listIdeas } from "@/lib/ideas";
 import { listPersons } from "@/lib/persons";
 import { STATUS } from "../ui";
+import { StatusSelect } from "../StatusSelect";
 import { AddPerson } from "./AddPerson";
 import { PersonFlow } from "./PersonFlow";
 
@@ -51,6 +52,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
             </span>
           )}
         </p>
+        <StatusSelect eventId={event.id} occurrence={event.date.toISOString().slice(0, 10)} status={event.status} auto={event.auto} />
       </div>
 
       {!single && event.persons.length > 0 && (

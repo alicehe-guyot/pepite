@@ -76,6 +76,16 @@ export async function dropGift(giftId: string): Promise<void> {
   refresh();
 }
 
+// Déplace un événement vers un statut, pour cette occurrence (null : revenir au calcul automatique).
+export async function setEventStatus(eventId: string, occurrence: string, status: "todo" | "progress" | "ready" | null): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("events")
+    .update({ status_override: status, status_override_on: status ? occurrence : null })
+    .eq("id", eventId);
+  refresh();
+}
+
 // Retire une personne de l'événement (sa fiche est gardée).
 export async function removePerson(eventId: string, personId: string): Promise<void> {
   const supabase = await createClient();
