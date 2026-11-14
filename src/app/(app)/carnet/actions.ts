@@ -6,8 +6,9 @@ import { RUBRICS } from "@/lib/persons";
 
 // Enregistre le portrait (5 rubriques). Une rubrique vidée redevient « à compléter ».
 export async function savePortrait(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  // Les 5 rubriques du portrait, plus les notes libres (retour Alice #26 : modifiables).
   const update = Object.fromEntries(
-    RUBRICS.map(({ key }) => {
+    [...RUBRICS, { key: "description" }].map(({ key }) => {
       const value = String(formData.get(key) ?? "").trim();
       return [key, value || null];
     }),

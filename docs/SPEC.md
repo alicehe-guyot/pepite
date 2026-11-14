@@ -554,6 +554,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-11-07 | Pour l'instant, un mot de passe commun pour tous (compte d'Alice) : tout le monde voit tout, le secret de JB est suspendu à l'écran | Choix d'Alice pour ouvrir l'app vite ; la RLS reste en place et se réactive avec un compte JB |
 | 2026-11-14 | Carnet > Idées et capture ＋ : un lien collé prend le titre de son aperçu Open Graph (repli : nom du site) ; une idée sans destinataire va dans « Sans personne » ; supprimer = archiver | Rendre l'app utilisable avant Noël ; rien n'est effacé par erreur |
 | 2026-11-14 | Une idée se supprime vraiment (croix sur la ligne, second tap pour confirmer), elle ne s'archive plus | Retour d'Alice (#9) |
+| 2026-11-14 | On garde les 5 rubriques du portrait pour ce qui est structuré (situation, passions, style, à éviter, envies) ; les Notes libres deviennent modifiables et vont sous le portrait | Retour d'Alice (#26), pas sûre de l'utilité des catégories : les rubriques nourrissent le brief, les notes gardent le reste |
 
 ---
 
