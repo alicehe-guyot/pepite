@@ -24,8 +24,7 @@ export type PersonSummary = {
 export type Person = PersonSummary &
   Record<RubricKey, string | null> & {
     description: string | null;
-    groups: string[];
-    ideas: number;
+    groups: { id: string; name: string }[];
   };
 
 // Âge calculé, jamais saisi. Null si l'année est inconnue.
@@ -60,21 +59,19 @@ export async function getPerson(slug: string): Promise<Person | null> {
     .from("persons")
     .select(
       `${SUMMARY}, description, situation, passions, style, avoid, wishes,
-       group_members(groups(name)), idea_recipients(idea_id)`,
+       group_members(groups(id, name))`,
     )
     .eq("slug", slug)
     .maybeSingle<
-      Omit<Person, "groups" | "ideas"> & {
-        group_members: { groups: { name: string } | null }[];
-        idea_recipients: { idea_id: string }[];
+      Omit<Person, "groups"> & {
+        group_members: { groups: { id: string; name: string } | null }[];
       }
     >();
   if (error) throw error;
   if (!data) return null;
-  const { group_members, idea_recipients, ...person } = data;
+  const { group_members, ...person } = data;
   return {
     ...person,
-    groups: group_members.flatMap((g) => (g.groups ? [g.groups.name] : [])),
-    ideas: idea_recipients.length,
+    groups: group_members.flatMap((g) => (g.groups ? [g.groups] : [])),
   };
 }
