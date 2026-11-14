@@ -2,21 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { RUBRICS } from "@/lib/persons";
 
 // Enregistre le portrait (5 rubriques). Une rubrique vidée redevient « à compléter ».
-export async function savePortrait(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
-  // Les 5 rubriques du portrait, plus les notes libres (retour Alice #26 : modifiables).
-  const update = Object.fromEntries(
-    [...RUBRICS, { key: "description" }].map(({ key }) => {
-      const value = String(formData.get(key) ?? "").trim();
-      return [key, value || null];
-    }),
-  );
+export async function saveNotes(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  // Tout le portrait tient dans les Notes (retour Alice #64) ; les 5 rubriques ne sont plus utilisées.
+  const description = String(formData.get("description") ?? "").trim() || null;
   const supabase = await createClient();
-  const { error } = await supabase.from("persons").update(update).eq("slug", slug);
+  const { error } = await supabase.from("persons").update({ description }).eq("slug", slug);
   if (error) return "Enregistrement impossible";
-  revalidatePath(`/carnet/${slug}`);
+  revalidatePath("/carnet", "layout");
+  return "Enregistré";
+}
+
+// Ville (seule info gardée à part des Notes, #64).
+export async function saveCity(slug: string, _prev: string | null, formData: FormData): Promise<string | null> {
+  const city = String(formData.get("city") ?? "").trim() || null;
+  const supabase = await createClient();
+  const { error } = await supabase.from("persons").update({ city }).eq("slug", slug);
+  if (error) return "Enregistrement impossible";
+  revalidatePath("/carnet", "layout");
   return "Enregistré";
 }
 

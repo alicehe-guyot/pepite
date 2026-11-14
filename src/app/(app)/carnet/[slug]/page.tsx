@@ -1,17 +1,33 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ageLabel, birthdayLabel, getPerson, MONTHS, RUBRICS } from "@/lib/persons";
-import { BirthdayForm } from "./BirthdayForm";
-import { BudgetForm } from "./BudgetForm";
-import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
+import { BackLink } from "@/components/BackLink";
 import { ShareButton } from "@/components/ShareButton";
-import { IdeaList } from "../idees/IdeaList";
-import { giftsFor, listGivenGifts } from "@/lib/gifts";
-import { GiftList } from "../offerts/GiftList";
-import { PortraitForm } from "./PortraitForm";
 import { buildBrief, myPrinciples, upcomingEventsFor } from "@/lib/brief";
+import { giftsFor, listGivenGifts } from "@/lib/gifts";
+import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
+import { ageLabel, birthdayLabel, getPerson, MONTHS } from "@/lib/persons";
+import { IdeaList } from "../idees/IdeaList";
+import { GiftList } from "../offerts/GiftList";
 import { BriefButton } from "./BriefButton";
+import { InfoChips } from "./InfoChips";
+import { NotesForm } from "./NotesForm";
 
+function Section({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-bold">
+          {title}
+          {count !== undefined && <span className="ml-1.5 text-[14px] font-semibold text-muted">{count}</span>}
+        </h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Fiche personne compacte (#65) : infos en pastilles, idées, offerts, notes, brief.
 export default async function PersonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [person, allIdeas, allGifts, principles] = await Promise.all([getPerson(slug), listIdeas(), listGivenGifts(), myPrinciples()]);
@@ -20,36 +36,34 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
   const groupIds = person.groups.map((g) => g.id);
   const ideas = ideasFor(allIdeas, person.id, groupIds).filter((i) => !i.given);
   const given = giftsFor(allGifts, person.id, groupIds);
-  // Un brief par événement à venir (et un sans événement) : on choisit pour lequel avant de copier.
   const briefs = [
     ...events.map((e) => ({ key: `${e.id}-${e.date.toISOString()}`, label: e.title, text: buildBrief(person, { ideas, gifts: given, principles, event: e }) })),
     { key: "aucun", label: "Sans occasion", text: buildBrief(person, { ideas, gifts: given, principles, event: null }) },
   ];
-
-  const details = [ageLabel(person), person.city].filter(Boolean).join(", ");
+  const age = ageLabel(person);
 
   return (
-    <div className="flex flex-col gap-5">
-      <Link href="/carnet" className="-ml-1 flex h-11 w-fit items-center gap-1 text-[16px] font-semibold text-accent">
-        <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-          <path d="M8 2L2 8l6 6" />
-        </svg>
-        Carnet
-      </Link>
+    <div className="flex flex-col gap-4">
+      <BackLink href="/carnet">Carnet</BackLink>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-bold leading-tight">{person.name}</h1>
-        {details && <p className="text-[15px] text-muted">{details}</p>}
-        <p className="text-[15px] text-muted">
-          {ideas.length} {ideas.length > 1 ? "idées" : "idée"}
-        </p>
+      <div className="flex items-baseline gap-2">
+        <h1 className="text-[26px] font-bold leading-tight">{person.name}</h1>
+        {age && <span className="text-[15px] text-muted">{age}</span>}
       </div>
 
+      <InfoChips
+        slug={person.slug}
+        months={MONTHS}
+        birthday={{ label: birthdayLabel(person), day: person.birth_day, month: person.birth_month, year: person.birth_year }}
+        city={person.city}
+        budget={person.budget_max}
+      />
+
       {person.groups.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
+        <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
           {person.groups.map((g) => (
-            <li key={g.id}>
-              <Link href={`/carnet/groupe/${g.slug}`} className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[14px] font-semibold">
+            <li key={g.id} className="shrink-0">
+              <Link href={`/carnet/groupe/${g.slug}`} className="flex min-h-11 items-center whitespace-nowrap rounded-full border border-line px-3.5 text-[14px] font-semibold">
                 {g.name}
               </Link>
             </li>
@@ -57,42 +71,23 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         </ul>
       )}
 
-      <BirthdayForm
-        slug={person.slug}
-        label={birthdayLabel(person)}
-        months={MONTHS}
-        value={{ day: person.birth_day, month: person.birth_month, year: person.birth_year }}
-      />
-      <BudgetForm slug={person.slug} value={person.budget_max} />
+      <BriefButton briefs={briefs} />
 
-      <div className="flex flex-wrap gap-2">
-        <BriefButton briefs={briefs} />
-      </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-bold">Idées</h2>
-        {ideas.some((i) => !i.given) && (
-          <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas }])} />
-        )}
+      <Section
+        title="Idées"
+        count={ideas.length}
+        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas }])} label="Partager" small />}
+      >
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-bold">Déjà offert</h2>
+      <Section title="Déjà offert" count={given.length}>
         <GiftList gifts={given} empty="Rien d'offert pour l'instant" />
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-bold">Portrait</h2>
-        <PortraitForm
-          slug={person.slug}
-          rubrics={[
-            ...RUBRICS.map((r) => ({ key: r.key, label: r.label, value: person[r.key] })),
-            { key: "description", label: "Notes", value: person.description },
-          ]}
-        />
-      </section>
-
+      <Section title="Notes">
+        <NotesForm slug={person.slug} value={person.description} />
+      </Section>
     </div>
   );
 }

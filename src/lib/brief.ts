@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { eventsBetween, parisToday } from "@/lib/agenda";
 import type { GivenGift } from "@/lib/gifts";
 import type { Idea } from "@/lib/ideas";
-import { age, RUBRICS, type Person } from "@/lib/persons";
+import { age, type Person } from "@/lib/persons";
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
 const clean = (s: string) => s.replace(/\s+/g, " ").trim().replace(/[.\s]+$/, "");
@@ -35,8 +35,8 @@ export function buildBrief(
   const lines = [`Idée cadeau pour ${head}.`];
   if (opts.event) lines.push(`Occasion : ${opts.event.title}, le ${dateFormat.format(opts.event.date)}.`);
   if (person.budget_max) lines.push(`Budget : jusqu'à ${person.budget_max} €.`);
-  for (const r of RUBRICS) if (person[r.key]) lines.push(`${r.label} : ${clean(person[r.key]!)}.`);
-  if (person.description) lines.push(`À savoir : ${clean(person.description)}.`);
+  // Les notes contiennent tout le portrait (#64), une info par ligne.
+  if (person.description) lines.push(...person.description.split("\n").map(clean).filter(Boolean).map((l) => `${l}.`));
   const worked = opts.gifts.filter((g) => g.rating === "wow" || g.rating === "worked");
   const missed = opts.gifts.filter((g) => g.rating === "miss");
   if (worked.length) lines.push(`A marché : ${worked.map((g) => g.title + (g.rating === "wow" ? " (effet wow)" : "")).join(", ")}.`);

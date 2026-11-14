@@ -1,29 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { ShareButton } from "@/components/ShareButton";
 
-// Brief Instinct : on choisit l'occasion (le prochain événement par défaut), puis on copie.
+// Brief Instinct : choisir l'occasion (le prochain événement par défaut), puis copier. Une seule ligne.
 export function BriefButton({ briefs }: { briefs: { key: string; label: string; text: string }[] }) {
   const [key, setKey] = useState(briefs[0]?.key);
+  const [copied, setCopied] = useState(false);
   const brief = briefs.find((b) => b.key === key) ?? briefs[0];
+  async function copy() {
+    await navigator.clipboard.writeText(brief.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   return (
-    <div className="flex flex-col gap-2 md:max-w-2xl">
-      <span className="text-[13px] font-semibold uppercase tracking-wide text-muted">Brief pour</span>
-      <div className="flex flex-wrap gap-2">
+    <div className="flex items-center gap-2 md:max-w-xl">
+      <select
+        value={key}
+        onChange={(e) => setKey(e.target.value)}
+        aria-label="Brief pour quelle occasion"
+        className="h-11 min-w-0 flex-1 rounded-xl bg-surface px-3 text-[15px] font-semibold outline-accent"
+      >
         {briefs.map((b) => (
-          <button
-            key={b.key}
-            type="button"
-            aria-pressed={b.key === key}
-            onClick={() => setKey(b.key)}
-            className={`flex min-h-11 items-center rounded-full px-4 text-[15px] font-semibold ${b.key === key ? "bg-ink text-white" : "bg-surface"}`}
-          >
+          <option key={b.key} value={b.key}>
             {b.label}
-          </button>
+          </option>
         ))}
-      </div>
-      <ShareButton text={brief.text} label="Copier le brief" copy />
+      </select>
+      <button type="button" onClick={copy} className="h-11 shrink-0 rounded-xl bg-accent px-4 text-[15px] font-semibold text-white">
+        {copied ? "Copié" : "Copier le brief"}
+      </button>
     </div>
   );
 }
