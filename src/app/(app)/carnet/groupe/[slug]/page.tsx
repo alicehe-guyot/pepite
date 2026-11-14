@@ -1,15 +1,18 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getGroup, listGroups } from "@/lib/groups";
 import { listIdeas, shareText } from "@/lib/ideas";
 import { ShareButton } from "@/components/ShareButton";
 import { IdeaList } from "../../idees/IdeaList";
-import { RenameForm } from "./RenameForm";
+import { Members } from "./Members";
+import { EditableTitle } from "@/components/EditableTitle";
+import { ConfirmButton } from "@/components/ConfirmButton";
+import { deleteGroup, renameGroupTo } from "../../actions";
+import { listPersons } from "@/lib/persons";
 
 export default async function GroupPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [group, allIdeas, groups] = await Promise.all([getGroup(slug), listIdeas(), listGroups()]);
+  const [group, allIdeas, groups, everyone] = await Promise.all([getGroup(slug), listIdeas(), listGroups(), listPersons()]);
   if (!group) notFound();
   const memberIds = group.members.map((m) => m.id);
   // Sous-groupes : les groupes dont tous les membres sont dans celui-ci (ex. Alice & JB dans
@@ -33,24 +36,16 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
   ]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <BackLink href="/carnet">Carnet</BackLink>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[24px] font-bold leading-tight">{group.name}</h1>
+      <div className="flex flex-col">
+        <EditableTitle value={group.name} onSave={renameGroupTo.bind(null, group.slug)} />
         <p className="text-[15px] text-muted">
           {ideas.length} {ideas.length > 1 ? "idées" : "idée"}
         </p>
       </div>
 
-      <ul className="flex flex-wrap gap-2">
-        {group.members.map((m) => (
-          <li key={m.id}>
-            <Link href={`/carnet/${m.slug}`} className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[15px] font-semibold">
-              {m.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <Members groupId={group.id} members={group.members} everyone={everyone.map((p) => ({ id: p.id, slug: p.slug, name: p.name }))} />
 
       <ShareButton text={share} />
 
@@ -59,7 +54,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </section>
 
-      <RenameForm slug={group.slug} name={group.name} />
+      <ConfirmButton action={deleteGroup.bind(null, group.slug)} label="Supprimer le groupe" />
     </div>
   );
 }

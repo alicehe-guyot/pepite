@@ -1,4 +1,6 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
+import { EditableTitle } from "@/components/EditableTitle";
+import { renameIdea } from "../actions";
 import { notFound } from "next/navigation";
 import { listCategories } from "@/lib/categories";
 import { getIdea, recipientChoices } from "@/lib/ideas";
@@ -14,16 +16,11 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/carnet?vue=idees" className="-ml-1 flex h-11 w-fit items-center gap-1 text-[16px] font-semibold text-accent">
-        <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-          <path d="M8 2L2 8l6 6" />
-        </svg>
-        Idées
-      </Link>
+      <BackLink href="/carnet?vue=idees">Idées</BackLink>
 
-      <h1 className="text-[24px] font-bold leading-tight">{idea.title}</h1>
+      <EditableTitle value={idea.title} onSave={renameIdea.bind(null, idea.id)} label="Titre" />
       {idea.url && (
-        <ul className="-mt-3 flex flex-wrap gap-x-4">
+        <ul className="-mt-2 flex flex-wrap gap-x-4">
           {[idea.url, ...idea.links].map((l) => (
             <li key={l}>
               <a href={l} target="_blank" rel="noreferrer" className="flex min-h-11 items-center text-[15px] font-semibold text-accent">

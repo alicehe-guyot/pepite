@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PageTitle } from "@/components/PageTitle";
+import { AddInline } from "./AddInline";
+import { createGroup, createPerson } from "./actions";
 import { ageLabel, birthdayLabel, listPersons } from "@/lib/persons";
 import { listGroups } from "@/lib/groups";
 import { listIdeas, recipientChoices } from "@/lib/ideas";
@@ -54,6 +56,7 @@ async function Persons() {
     <>
       <details open className="group/s flex flex-col">
         <Summary title="Personnes" count={persons.length} />
+        <AddInline action={createPerson} placeholder="Prénom" />
         <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
           {persons.map((p) => {
             const details = [ageLabel(p), birthdayLabel(p), p.city].filter(Boolean).join(", ");
@@ -79,6 +82,7 @@ async function Persons() {
       </details>
       <details open className="group/s flex flex-col">
         <Summary title="Groupes" count={groups.length} />
+        <AddInline action={createGroup} placeholder="Nom du groupe" />
         <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
           {groups.map((g) => (
             <li key={g.id}>

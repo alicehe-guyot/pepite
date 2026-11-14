@@ -42,18 +42,19 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
 
   return (
     <form action={action} className="flex flex-col gap-5 md:max-w-2xl">
-      <label className="flex flex-col gap-1">
-        <span className={label}>{idea ? "Titre" : "Titre ou lien"}</span>
-        <input
-          name="title"
-          required
-          autoFocus={!idea}
-          defaultValue={idea?.title}
-          autoComplete="off"
-          placeholder={idea ? undefined : "Coller un lien ou écrire"}
-          className={`h-12 ${field}`}
-        />
-      </label>
+      {!idea && (
+        <label className="flex flex-col gap-1">
+          <span className={label}>Titre ou lien</span>
+          <input
+            name="title"
+            required
+            autoFocus
+                        autoComplete="off"
+            placeholder="Coller un lien ou écrire"
+            className={`h-12 ${field}`}
+          />
+        </label>
+      )}
 
 
       <label className="flex flex-col gap-1">

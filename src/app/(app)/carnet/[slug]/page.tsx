@@ -11,6 +11,9 @@ import { GiftList } from "../offerts/GiftList";
 import { BriefButton } from "./BriefButton";
 import { InfoChips } from "./InfoChips";
 import { NotesForm } from "./NotesForm";
+import { EditableTitle } from "@/components/EditableTitle";
+import { ConfirmButton } from "@/components/ConfirmButton";
+import { deletePerson, renamePerson } from "../actions";
 
 function Section({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -46,8 +49,8 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
     <div className="flex flex-col gap-4">
       <BackLink href="/carnet">Carnet</BackLink>
 
-      <div className="flex items-baseline gap-2">
-        <h1 className="text-[26px] font-bold leading-tight">{person.name}</h1>
+      <div className="flex flex-col">
+        <EditableTitle value={person.name} onSave={renamePerson.bind(null, person.slug)} />
         {age && <span className="text-[15px] text-muted">{age}</span>}
       </div>
 
@@ -88,6 +91,8 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       <Section title="Notes">
         <NotesForm slug={person.slug} value={person.description} />
       </Section>
+
+      <ConfirmButton action={deletePerson.bind(null, person.slug)} label="Supprimer la fiche" />
     </div>
   );
 }
