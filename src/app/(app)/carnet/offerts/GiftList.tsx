@@ -2,14 +2,14 @@
 
 import { useState, useTransition } from "react";
 import type { GivenGift } from "@/lib/gifts";
-import { deleteGift, rateGift, setGiftDate } from "./actions";
+import { deleteGift, rateGift, setGiftCategories, setGiftDate } from "./actions";
 import { RATING_LABEL, RatingPicker } from "./RatingPicker";
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 const BADGE = { wow: "bg-ready text-ink", worked: "bg-surface text-ink", miss: "bg-todo text-ink" } as const;
 
-function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: boolean }) {
+function GiftRow({ gift, showRecipients, categories }: { gift: GivenGift; showRecipients: boolean; categories: string[] }) {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
   const [pending, start] = useTransition();
@@ -17,6 +17,7 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
     showRecipients && gift.recipients.map((r) => r.name).join(", "),
     gift.givenOn ? dateFormat.format(new Date(`${gift.givenOn}T00:00:00Z`)) : [gift.occasion, gift.year].filter(Boolean).join(" "),
     gift.givenOn && gift.occasion,
+    ...gift.categories,
   ]
     .filter(Boolean)
     .join(", ");
@@ -61,6 +62,25 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
               className="h-11 rounded-xl bg-surface px-2 text-[16px] outline-accent"
             />
           </label>
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 rounded-2xl bg-bg p-2">
+              {categories.map((c) => {
+                const on = gift.categories.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    aria-pressed={on}
+                    disabled={pending}
+                    onClick={() => start(() => setGiftCategories(gift.id, on ? gift.categories.filter((x) => x !== c) : [...gift.categories, c]))}
+                    className={`flex min-h-11 items-center rounded-full px-3 text-[14px] font-semibold ${on ? "bg-accent text-white" : "bg-surface"}`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <RatingPicker
             initial={gift.rating}
             comment={gift.comment}
@@ -77,12 +97,22 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
 }
 
 // Cadeaux offerts : tap pour noter ou changer la note, croix pour supprimer.
-export function GiftList({ gifts, showRecipients = true, empty = "Aucun cadeau offert" }: { gifts: GivenGift[]; showRecipients?: boolean; empty?: string }) {
+export function GiftList({
+  gifts,
+  showRecipients = true,
+  empty = "Aucun cadeau offert",
+  categories = [],
+}: {
+  gifts: GivenGift[];
+  showRecipients?: boolean;
+  empty?: string;
+  categories?: string[];
+}) {
   if (!gifts.length) return <p className="text-muted">{empty}</p>;
   return (
     <ul className="grid gap-2 md:grid-cols-2">
       {gifts.map((g) => (
-        <GiftRow key={g.id} gift={g} showRecipients={showRecipients} />
+        <GiftRow key={g.id} gift={g} showRecipients={showRecipients} categories={categories} />
       ))}
     </ul>
   );

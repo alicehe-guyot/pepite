@@ -12,7 +12,7 @@ const field = "rounded-xl bg-surface px-3 py-2.5 text-[16px] outline-accent plac
 const label = "text-[13px] font-semibold uppercase tracking-wide text-muted";
 
 // Cadeau déjà offert : quoi, pour qui, quand, occasion, puis la note (facultative : sinon « À noter »).
-export function GiftForm({ choices, today }: { choices: Choice[]; today: string }) {
+export function GiftForm({ choices, categories, today }: { choices: Choice[]; categories: string[]; today: string }) {
   const [message, action, pending] = useActionState(addGivenGift, null);
   const people = choices.filter((c) => c.kind === "person");
   const groups = choices.filter((c) => c.kind === "group");
@@ -54,6 +54,18 @@ export function GiftForm({ choices, today }: { choices: Choice[]; today: string 
           <input name="occasion" autoComplete="off" placeholder="Noël 2025" className={`h-12 ${field}`} />
         </label>
       </div>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className={`${label} mb-2`}>Catégories</legend>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <label key={c} className={chip}>
+              <input type="checkbox" name="categories" value={c} className="sr-only" />
+              {c}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <label className="flex flex-col gap-1">
         <span className={label}>Commentaire</span>

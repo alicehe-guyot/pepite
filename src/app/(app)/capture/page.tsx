@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CATEGORIES, recipientChoices } from "@/lib/ideas";
+import { listCategories } from "@/lib/categories";
+import { recipientChoices } from "@/lib/ideas";
 import { IdeaForm } from "../carnet/idees/IdeaForm";
 import { GiftForm } from "../carnet/offerts/GiftForm";
 
@@ -7,7 +8,7 @@ import { GiftForm } from "../carnet/offerts/GiftForm";
 export default async function CapturePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
   const { type } = await searchParams;
   const given = type === "offert";
-  const choices = await recipientChoices();
+  const [choices, categories] = await Promise.all([recipientChoices(), listCategories()]);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
   const tab = (active: boolean) =>
     `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
@@ -23,7 +24,7 @@ export default async function CapturePage({ searchParams }: { searchParams: Prom
           Déjà offert
         </Link>
       </nav>
-      {given ? <GiftForm choices={choices} today={today} /> : <IdeaForm choices={choices} categories={CATEGORIES} />}
+      {given ? <GiftForm choices={choices} categories={categories} today={today} /> : <IdeaForm choices={choices} categories={categories} />}
     </div>
   );
 }
