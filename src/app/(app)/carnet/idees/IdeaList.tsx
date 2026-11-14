@@ -17,7 +17,9 @@ export function IdeaList({ ideas, empty = "Aucune idée" }: { ideas: Idea[]; emp
             >
               <span className="flex items-baseline justify-between gap-2">
                 <span className="text-[16px] font-semibold">{i.title}</span>
-                {i.is_lead && <span className="shrink-0 text-[13px] font-semibold text-muted">Piste</span>}
+                {(i.is_lead || i.given) && (
+                  <span className="shrink-0 text-[13px] font-semibold text-muted">{i.given ? "Offerte" : "Piste"}</span>
+                )}
               </span>
               <span className="truncate text-[14px] text-muted">{details}</span>
               {i.note && <span className="line-clamp-2 text-[14px]">{i.note}</span>}

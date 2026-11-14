@@ -24,9 +24,11 @@ export type Idea = {
   is_lead: boolean;
   created_at: string;
   recipients: Recipient[];
+  given: boolean; // déjà offerte : au moins un cadeau offert issu de cette idée
 };
 
-type IdeaRow = Omit<Idea, "recipients"> & {
+type IdeaRow = Omit<Idea, "recipients" | "given"> & {
+  gifts: { status: string }[];
   idea_recipients: {
     persons: { id: string; slug: string; name: string } | null;
     groups: { id: string; slug: string; name: string } | null;
@@ -34,7 +36,7 @@ type IdeaRow = Omit<Idea, "recipients"> & {
 };
 
 const SELECT = `id, title, url, note, category, is_lead, created_at,
-  idea_recipients(persons(id, slug, name), groups(id, slug, name))`;
+  idea_recipients(persons(id, slug, name), groups(id, slug, name)), gifts(status)`;
 
 // Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.
 export const myPersonId = cache(async (): Promise<string | null> => {
@@ -47,14 +49,14 @@ export const myPersonId = cache(async (): Promise<string | null> => {
 });
 
 function toIdea(row: IdeaRow, me: string | null): Idea {
-  const { idea_recipients, ...idea } = row;
+  const { idea_recipients, gifts, ...idea } = row;
   const recipients = idea_recipients.flatMap((r): Recipient[] => {
     if (r.persons) return [{ kind: "person", ...r.persons, name: r.persons.id === me ? "Moi" : r.persons.name }];
     if (r.groups) return [{ kind: "group", ...r.groups }];
     return [];
   });
   recipients.sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  return { ...idea, recipients };
+  return { ...idea, recipients, given: gifts.some((g) => g.status === "given") };
 }
 
 // Idées non archivées, les plus récentes d'abord. La RLS masque déjà les idées secrètes.
