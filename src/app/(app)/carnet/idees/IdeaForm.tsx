@@ -41,7 +41,7 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
   const showLinks = Boolean(idea) || isLead;
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form action={action} className="flex flex-col gap-5 md:max-w-2xl">
       <label className="flex flex-col gap-1">
         <span className={label}>{idea ? "Titre" : "Titre ou lien"}</span>
         <input
@@ -137,7 +137,7 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
         />
       </label>
 
-      <div className="sticky bottom-24 flex items-center gap-3 bg-bg pt-1">
+      <div className="sticky bottom-24 md:bottom-4 flex items-center gap-3 bg-bg pt-1">
         <button
           type="submit"
           disabled={pending}

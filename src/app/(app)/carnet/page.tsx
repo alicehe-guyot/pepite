@@ -10,7 +10,7 @@ function Tabs({ view }: { view: "personnes" | "idees" }) {
   const tab = (active: boolean) =>
     `flex h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-semibold ${active ? "bg-bg shadow-sm" : "text-muted"}`;
   return (
-    <nav aria-label="Vues du carnet" className="flex gap-1 rounded-2xl bg-surface p-1">
+    <nav aria-label="Vues du carnet" className="flex gap-1 rounded-2xl bg-surface p-1 md:max-w-sm">
       <Link href="/carnet" aria-current={view === "personnes" ? "page" : undefined} className={tab(view === "personnes")}>
         Personnes
       </Link>
@@ -34,7 +34,7 @@ async function Persons() {
     <>
       <section className="flex flex-col gap-1">
         <h2 className="font-display text-xl font-bold">Groupes</h2>
-        <ul className="flex flex-col">
+        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
           {groups.map((g) => (
             <li key={g.id}>
               <Link href={`/carnet/groupe/${g.slug}`} className="flex min-h-[56px] items-center gap-3 py-1.5">
@@ -58,7 +58,7 @@ async function Persons() {
 
       <section className="flex flex-col gap-1">
         <h2 className="font-display text-xl font-bold">Personnes</h2>
-        <ul className="flex flex-col">
+        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
           {persons.map((p) => {
             const details = [ageLabel(p), p.city].filter(Boolean).join(", ");
             return (

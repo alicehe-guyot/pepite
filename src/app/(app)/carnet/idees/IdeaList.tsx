@@ -7,7 +7,7 @@ export function IdeaList({ ideas, empty = "Aucune idée" }: { ideas: Idea[]; emp
   if (!ideas.length) return <p className="text-muted">{empty}</p>;
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="grid gap-2 md:grid-cols-2">
       {ideas.map((i) => {
         const details = [i.recipients.map((r) => r.name).join(", ") || "À trier", i.category].filter(Boolean).join(", ");
         return (

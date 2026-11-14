@@ -21,7 +21,7 @@ export function ShareButton({ text, label = "Partager la liste" }: { text: strin
   }
 
   return (
-    <button type="button" onClick={share} className="h-12 rounded-2xl bg-ink px-4 text-[16px] font-semibold text-white">
+    <button type="button" onClick={share} className="h-12 rounded-2xl bg-ink px-4 text-[16px] font-semibold text-white md:w-fit md:px-6">
       {copied ? "Copié" : label}
     </button>
   );

@@ -46,7 +46,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       {person.description && (
         <section className="flex flex-col gap-2">
           <h2 className="font-display text-xl font-bold">Notes</h2>
-          <p className="whitespace-pre-line rounded-xl bg-sun px-3 py-2.5 text-[15px]">{person.description}</p>
+          <p className="whitespace-pre-line rounded-xl bg-sun px-3 py-2.5 text-[15px] md:max-w-2xl">{person.description}</p>
         </section>
       )}
       <section className="flex flex-col gap-3">

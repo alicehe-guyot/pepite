@@ -57,7 +57,7 @@ export default async function AgendaPage() {
       {events.length === 0 ? (
         <p className="text-muted">Rien de prévu</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="grid gap-2 md:grid-cols-2">
           {events.map((e) => (
             <EventRow key={`${e.id}-${e.date.toISOString()}`} event={e} />
           ))}
