@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import type { GivenGift } from "@/lib/gifts";
-import { deleteGift, rateGift } from "./actions";
+import { deleteGift, rateGift, setGiftDate } from "./actions";
 import { RATING_LABEL, RatingPicker } from "./RatingPicker";
+
+const dateFormat = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 const BADGE = { wow: "bg-ready text-ink", worked: "bg-surface text-ink", miss: "bg-todo text-ink" } as const;
 
@@ -13,7 +15,8 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
   const [pending, start] = useTransition();
   const details = [
     showRecipients && gift.recipients.map((r) => r.name).join(", "),
-    [gift.occasion, gift.year].filter(Boolean).join(" "),
+    gift.givenOn ? dateFormat.format(new Date(`${gift.givenOn}T00:00:00Z`)) : [gift.occasion, gift.year].filter(Boolean).join(" "),
+    gift.givenOn && gift.occasion,
   ]
     .filter(Boolean)
     .join(", ");
@@ -48,7 +51,16 @@ function GiftRow({ gift, showRecipients }: { gift: GivenGift; showRecipients: bo
         </button>
       </div>
       {open && (
-        <div className="px-1.5 pb-1.5">
+        <div className="flex flex-col gap-1.5 px-1.5 pb-1.5">
+          <label className="flex items-center justify-between gap-3 rounded-2xl bg-bg px-3 py-1.5 text-[15px] font-semibold">
+            Offert le
+            <input
+              type="date"
+              defaultValue={gift.givenOn ?? ""}
+              onChange={(e) => start(() => setGiftDate(gift.id, e.target.value))}
+              className="h-11 rounded-xl bg-surface px-2 text-[16px] outline-accent"
+            />
+          </label>
           <RatingPicker
             initial={gift.rating}
             comment={gift.comment}

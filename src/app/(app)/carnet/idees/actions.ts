@@ -121,7 +121,7 @@ export async function markGiven(id: string, rating?: "wow" | "worked" | "miss" |
   if (!idea) return;
   const { data: gift } = await supabase
     .from("gifts")
-    .insert({ title: idea.title, idea_id: id, status: "given" })
+    .insert({ title: idea.title, idea_id: id, status: "given", given_on: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date()) })
     .select("id")
     .single();
   if (gift && idea.idea_recipients.length) {
