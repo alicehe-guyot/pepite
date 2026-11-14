@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ageLabel, getPerson, RUBRICS } from "@/lib/persons";
-import { ideasFor, listIdeas } from "@/lib/ideas";
+import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
+import { ShareButton } from "@/components/ShareButton";
 import { IdeaList } from "../idees/IdeaList";
 import { PortraitForm } from "./PortraitForm";
 
@@ -50,6 +51,9 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       )}
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold">Idées</h2>
+        {ideas.some((i) => !i.given) && (
+          <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas }])} />
+        )}
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </section>
 
