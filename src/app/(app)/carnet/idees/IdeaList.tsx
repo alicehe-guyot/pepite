@@ -12,8 +12,10 @@ import { DeleteButton } from "./DeleteButton";
 function IdeaRow({ idea: i }: { idea: Idea }) {
   const [giving, setGiving] = useState(false);
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const details = [i.recipients.map((r) => r.name).join(", ") || "À trier", i.category].filter(Boolean).join(", ");
-  const give = (rating: "wow" | "worked" | "miss" | null, comment = "") => start(() => markGiven(i.id, rating, comment));
+  const give = (rating: "wow" | "worked" | "miss" | null, comment = "") =>
+    start(async () => setError(await markGiven(i.id, rating, comment)));
 
   return (
     <li className={`flex flex-col rounded-2xl ${i.is_lead ? "bg-sun" : "bg-surface"}`}>
@@ -43,6 +45,7 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
         <div className="flex flex-col gap-1 px-1.5 pb-1.5">
           <span className="px-1.5 text-[14px] font-semibold">Offerte, ça a plu ?</span>
           <RatingPicker pending={pending} onRate={(r, c) => give(r, c)} onLater={() => give(null)} />
+          {error && <span className="px-1.5 text-[14px] font-semibold text-accent">{error}</span>}
         </div>
       )}
     </li>
