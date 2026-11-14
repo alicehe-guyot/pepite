@@ -10,6 +10,7 @@ import { IdeaList } from "../idees/IdeaList";
 import { GiftList } from "../offerts/GiftList";
 import { BriefButton } from "./BriefButton";
 import { InfoChips } from "./InfoChips";
+import { TraitChips } from "./TraitChips";
 import { NotesForm } from "./NotesForm";
 import { EditableTitle } from "@/components/EditableTitle";
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -61,6 +62,8 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
         city={person.city}
         budget={person.budget_max}
       />
+
+      <TraitChips slug={person.slug} gender={person.gender} ageGroup={person.age_group} />
 
       {person.groups.length > 0 && (
         <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
