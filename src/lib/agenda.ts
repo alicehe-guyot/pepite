@@ -50,8 +50,10 @@ export type AgendaEvent = {
 type EventRow = {
   id: string;
   title: string;
+  type: string;
   date: string;
   recurrence: "yearly" | "none";
+  reference_year: number | null;
   status_override: "todo" | "progress" | "ready" | null;
   status_override_on: string | null;
   event_persons: { persons: { id: string; slug: string; name: string } | null }[];
@@ -77,20 +79,55 @@ export function parisToday(now = new Date()): Date {
   return new Date(Date.UTC(y, m - 1, d));
 }
 
+// Pâques (algorithme grégorien anonyme), pour décaler la fête des mères si elle tombe à la Pentecôte.
+function easter(year: number): Date {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+// Date d'un événement une année donnée. Fêtes françaises à date variable (#78) :
+// mères = dernier dimanche de mai (premier de juin si c'est la Pentecôte) ; pères = 3e dimanche de juin.
+function dateIn(e: Pick<EventRow, "type" | "date">, year: number): Date {
+  if (e.type === "mothers_day") {
+    const last = new Date(Date.UTC(year, 4, 31));
+    last.setUTCDate(31 - last.getUTCDay());
+    const pentecost = new Date(easter(year).getTime() + 49 * DAY);
+    return last.getTime() === pentecost.getTime() ? new Date(last.getTime() + 7 * DAY) : last;
+  }
+  if (e.type === "fathers_day") {
+    const first = new Date(Date.UTC(year, 5, 1));
+    return new Date(Date.UTC(year, 5, 1 + ((7 - first.getUTCDay()) % 7) + 14));
+  }
+  const [, m, d] = e.date.split("-").map(Number);
+  return new Date(Date.UTC(year, m - 1, d));
+}
+
 // Prochaine occurrence (aujourd'hui compris) d'un événement annuel ; date telle quelle sinon.
-export function nextOccurrence(date: string, recurrence: "yearly" | "none", today: Date): Date {
-  const [y, m, d] = date.split("-").map(Number);
-  if (recurrence !== "yearly") return new Date(Date.UTC(y, m - 1, d));
-  let next = new Date(Date.UTC(today.getUTCFullYear(), m - 1, d));
-  if (next < today) next = new Date(Date.UTC(today.getUTCFullYear() + 1, m - 1, d));
-  return next;
+export function nextOccurrence(e: Pick<EventRow, "type" | "date" | "recurrence">, today: Date): Date {
+  if (e.recurrence !== "yearly") return new Date(`${e.date}T00:00:00Z`);
+  const next = dateIn(e, today.getUTCFullYear());
+  return next < today ? dateIn(e, today.getUTCFullYear() + 1) : next;
 }
 
 // Occurrences entre deux dates incluses (une par an pour un événement annuel).
-function occurrencesBetween(date: string, recurrence: "yearly" | "none", from: Date, to: Date): Date[] {
-  const [y, m, d] = date.split("-").map(Number);
-  const years = recurrence === "yearly" ? [from.getUTCFullYear(), to.getUTCFullYear()] : [y];
-  return [...new Set(years)].map((yy) => new Date(Date.UTC(yy, m - 1, d))).filter((o) => o >= from && o <= to);
+function occurrencesBetween(e: Pick<EventRow, "type" | "date" | "recurrence">, from: Date, to: Date): Date[] {
+  const dates =
+    e.recurrence === "yearly"
+      ? [...new Set([from.getUTCFullYear(), to.getUTCFullYear()])].map((y) => dateIn(e, y))
+      : [new Date(`${e.date}T00:00:00Z`)];
+  return dates.filter((o) => o >= from && o <= to);
+}
+
+// Noces (#78) : le thème de chaque anniversaire de mariage.
+const NOCES = ["", "coton", "cuir", "froment", "cire", "bois", "chypre", "laine", "coquelicot", "faïence", "étain", "corail", "soie", "muguet", "plomb", "cristal", "saphir", "rose", "turquoise", "cretonne", "porcelaine", "opale", "bronze", "béryl", "satin", "argent", "jade", "acajou", "nickel", "velours", "perle"];
+function occurrenceTitle(e: EventRow, date: Date): string {
+  if (e.type !== "wedding_anniversary" || !e.reference_year) return e.title;
+  const n = date.getUTCFullYear() - e.reference_year;
+  return n > 0 ? `${e.title} : ${n} ${n > 1 ? "ans" : "an"}${NOCES[n] ? `, noces de ${NOCES[n]}` : ""}` : e.title;
 }
 
 const STEP_OF: Record<GiftStatus, Step> = { chosen: "chosen", to_plan: "chosen", ordered: "ordered", ready: "ready", given: "given" };
@@ -116,7 +153,7 @@ async function load(eventId?: string): Promise<Loaded> {
   let query = supabase
     .from("events")
     .select(
-      `id, title, date, recurrence, status_override, status_override_on, event_persons(persons(id, slug, name)),
+      `id, title, type, date, recurrence, reference_year, status_override, status_override_on, event_persons(persons(id, slug, name)),
        gifts(id, title, status, needs_pickup, pickup_place, created_at, gift_recipients(person_id, group_id))`,
     );
   if (eventId) query = query.eq("id", eventId);
@@ -160,7 +197,7 @@ function toAgendaEvent(e: EventRow, date: Date, today: Date, groupsOf: Map<strin
   const status = auto !== "past" && e.status_override && e.status_override_on === iso ? e.status_override : auto;
   return {
     id: e.id,
-    title: e.title,
+    title: occurrenceTitle(e, date),
     date,
     daysLeft,
     persons,
@@ -175,7 +212,7 @@ export async function eventsBetween(from: Date, to: Date): Promise<AgendaEvent[]
   const today = parisToday();
   const { events, groupsOf } = await load();
   return events
-    .flatMap((e) => occurrencesBetween(e.date, e.recurrence, from, to).map((d) => toAgendaEvent(e, d, today, groupsOf)))
+    .flatMap((e) => occurrencesBetween(e, from, to).map((d) => toAgendaEvent(e, d, today, groupsOf)))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -197,5 +234,5 @@ export async function getEvent(id: string): Promise<AgendaEvent | null> {
   const { events, groupsOf } = await load(id);
   const e = events[0];
   if (!e) return null;
-  return toAgendaEvent(e, nextOccurrence(e.date, e.recurrence, today), today, groupsOf);
+  return toAgendaEvent(e, nextOccurrence(e, today), today, groupsOf);
 }
