@@ -7,6 +7,7 @@ import { getIdea, recipientChoices } from "@/lib/ideas";
 import { DeleteButton } from "../DeleteButton";
 import { IdeaForm } from "../IdeaForm";
 import { GiveIdea } from "./GiveIdea";
+import { PhotoPicker } from "@/components/PhotoPicker";
 
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,6 +31,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
           ))}
         </ul>
       )}
+
+      <PhotoPicker kind="ideas" id={idea.id} url={idea.imageUrl} shape="wide" />
 
       <GiveIdea id={idea.id} given={idea.given} />
 

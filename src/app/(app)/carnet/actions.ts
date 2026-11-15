@@ -190,3 +190,18 @@ export async function saveSizes(slug: string, _prev: string | null, formData: Fo
   revalidatePath("/carnet", "layout");
   return "Enregistré";
 }
+
+// Photo d'une fiche ou d'une idée (#88) : enregistre le chemin et supprime l'ancienne photo.
+export async function setPhoto(kind: "persons" | "ideas", id: string, path: string | null): Promise<string | null> {
+  if (path && !path.startsWith(`${kind}/${id}/`)) return "Chemin invalide";
+  const supabase = await createClient();
+  const column = kind === "persons" ? "photo_path" : "image_path";
+  const { data: before } = await supabase.from(kind).select(column).eq("id", id).maybeSingle<Record<string, string | null>>();
+  const { error } = await supabase.from(kind).update({ [column]: path }).eq("id", id);
+  if (error) return "Enregistrement impossible";
+  const old = before?.[column];
+  if (old && old !== path) await supabase.storage.from("photos").remove([old]);
+  revalidatePath("/carnet", "layout");
+  revalidatePath("/agenda", "layout");
+  return null;
+}
