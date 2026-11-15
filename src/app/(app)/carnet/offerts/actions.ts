@@ -71,5 +71,6 @@ export async function addGivenGift(_prev: string | null, formData: FormData): Pr
     if (fError) return "Note non enregistrée";
   }
   revalidatePath("/carnet", "layout");
-  redirect("/carnet?vue=offerts");
+  const back = String(formData.get("back") ?? "");
+  redirect(back.startsWith("/carnet/") ? back : "/carnet?vue=offerts");
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getGroup, listGroups } from "@/lib/groups";
@@ -51,7 +52,15 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
       <ShareButton text={share} photos={ideas.flatMap((i) => (i.imageUrl ? [{ url: i.imageUrl, name: i.title }] : []))} />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-bold">Idées</h2>
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-bold">Idées</h2>
+          <Link href={`/capture?pour=group:${group.id}&retour=/carnet/groupe/${group.slug}`} className="flex h-11 items-center gap-1 rounded-xl px-2 text-[15px] font-semibold text-accent">
+            <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M7 2v10M2 7h10" />
+            </svg>
+            Idée
+          </Link>
+        </div>
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </section>
 

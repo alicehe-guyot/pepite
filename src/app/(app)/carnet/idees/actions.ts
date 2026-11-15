@@ -101,7 +101,8 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
   }
 
   revalidatePath("/carnet", "layout");
-  redirect("/carnet?vue=idees");
+  const back = String(formData.get("back") ?? "");
+  redirect(back.startsWith("/carnet/") ? back : "/carnet?vue=idees");
 }
 
 // Supprime l'idée (retour Alice #9 : supprimer, pas archiver). Ses cadeaux restent, sans lien vers elle.

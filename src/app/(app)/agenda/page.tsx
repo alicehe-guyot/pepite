@@ -10,7 +10,7 @@ const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
 function EventList({ events, empty }: { events: AgendaEvent[]; empty: string }) {
   if (!events.length) return <p className="text-muted">{empty}</p>;
   return (
-    <ul className="grid gap-2 md:grid-cols-2">
+    <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
       {events.map((e) => (
         <EventRow key={`${e.id}-${e.date.toISOString()}`} event={e} />
       ))}

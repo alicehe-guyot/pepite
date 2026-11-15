@@ -69,7 +69,13 @@ function PersonFilter({ active }: { active: Trait[] }) {
 }
 
 async function Persons({ active }: { active: Trait[] }) {
-  const [everyone, groups] = await Promise.all([listPersons(), listGroups()]);
+  const [everyone, groups, ideas] = await Promise.all([listPersons(), listGroups(), listIdeas()]);
+  // Idées en cours par personne (#91) : directes et via ses groupes, pas encore offertes.
+  const open = ideas.filter((i) => !i.given);
+  const ideaCount = (id: string) => {
+    const mine = groups.filter((g) => g.members.some((m) => m.id === id)).map((g) => g.id);
+    return open.filter((i) => i.recipients.some((r) => (r.kind === "person" ? r.id === id : mine.includes(r.id)))).length;
+  };
   const persons = everyone.filter((p) => active.every((t) => p.gender === t || p.age_group === t));
   const pastel = new Map(everyone.map((p, i) => [p.id, PASTELS[i % PASTELS.length]]));
   return (
@@ -78,9 +84,10 @@ async function Persons({ active }: { active: Trait[] }) {
       <details open className="group/s flex flex-col">
         <Summary title="Personnes" count={persons.length} />
         <AddInline action={createPerson} placeholder="Prénom" />
-        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
+        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3 2xl:grid-cols-4">
           {persons.map((p) => {
-            const details = [ageLabel(p), birthdayLabel(p), p.city].filter(Boolean).join(", ");
+            const n = ideaCount(p.id);
+            const details = [n ? `${n} ${n > 1 ? "idées" : "idée"}` : null, ageLabel(p), birthdayLabel(p), p.city].filter(Boolean).join(", ");
             return (
               <li key={p.id}>
                 <Link href={`/carnet/${p.slug}`} className="flex min-h-[56px] items-center gap-3 py-1.5">
@@ -109,7 +116,7 @@ async function Persons({ active }: { active: Trait[] }) {
       <details open className="group/s flex flex-col">
         <Summary title="Groupes" count={groups.length} />
         <AddInline action={createGroup} placeholder="Nom du groupe" />
-        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3">
+        <ul className="grid md:grid-cols-2 md:gap-x-8 lg:grid-cols-3 2xl:grid-cols-4">
           {groups.map((g) => (
             <li key={g.id}>
               <Link href={`/carnet/groupe/${g.slug}`} className="flex min-h-[56px] items-center gap-3 py-1.5">
@@ -178,8 +185,11 @@ export default async function CarnetPage({ searchParams }: { searchParams: Promi
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <PageTitle>Carnet</PageTitle>
-        <Link href="/carnet/principes" className="flex min-h-11 items-center rounded-full bg-surface px-4 text-[15px] font-semibold">
-          Réglages
+        <Link href="/carnet/principes" aria-label="Réglages" title="Réglages" className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-muted">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+          </svg>
         </Link>
       </div>
       <Tabs view={view} />

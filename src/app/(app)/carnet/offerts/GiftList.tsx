@@ -111,7 +111,7 @@ export function GiftList({
 }) {
   if (!gifts.length) return <Empty>{empty}</Empty>;
   return (
-    <ul className="grid gap-2 md:grid-cols-2">
+    <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
       {gifts.map((g) => (
         <GiftRow key={g.id} gift={g} showRecipients={showRecipients} categories={categories} />
       ))}
