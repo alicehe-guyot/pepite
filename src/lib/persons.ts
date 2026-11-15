@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { signPhotos } from "@/lib/photos";
 
 // Portrait : 5 rubriques identiques pour tous (SPEC §8.10).
 export const RUBRICS = [
@@ -21,6 +22,8 @@ export type PersonSummary = {
   birth_day: number | null;
   gender: "female" | "male" | null;
   age_group: "adult" | "child" | null;
+  photo_path: string | null;
+  photoUrl?: string | null; // lien temporaire vers la photo (#88)
 };
 
 // Femme ou homme, adulte ou enfant (#76).
@@ -73,13 +76,16 @@ export function birthdayLabel(p: Pick<PersonSummary, "birth_month" | "birth_day"
   return p.birth_day ? `${p.birth_day === 1 ? "1er" : p.birth_day} ${month}` : month;
 }
 
-const SUMMARY = "id, slug, name, city, birth_year, birth_month, birth_day, gender, age_group";
+const SUMMARY = "id, slug, name, city, birth_year, birth_month, birth_day, gender, age_group, photo_path";
 
 export async function listPersons(): Promise<PersonSummary[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("persons").select(SUMMARY).order("name").returns<PersonSummary[]>();
   if (error) throw error;
-  return (data ?? []).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const urls = await signPhotos((data ?? []).map((p) => p.photo_path));
+  return (data ?? [])
+    .map((p) => ({ ...p, photoUrl: p.photo_path ? (urls[p.photo_path] ?? null) : null }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
 }
 
 export async function getPerson(slug: string): Promise<Person | null> {
@@ -99,8 +105,10 @@ export async function getPerson(slug: string): Promise<Person | null> {
   if (error) throw error;
   if (!data) return null;
   const { group_members, ...person } = data;
+  const urls = await signPhotos([person.photo_path]);
   return {
     ...person,
+    photoUrl: person.photo_path ? (urls[person.photo_path] ?? null) : null,
     groups: group_members.flatMap((g) => (g.groups ? [g.groups] : [])),
   };
 }

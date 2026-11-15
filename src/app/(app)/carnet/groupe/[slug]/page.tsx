@@ -48,7 +48,7 @@ export default async function GroupPage({ params }: { params: Promise<{ slug: st
 
       <Members groupId={group.id} members={group.members} everyone={everyone.map((p) => ({ id: p.id, slug: p.slug, name: p.name }))} />
 
-      <ShareButton text={share} />
+      <ShareButton text={share} photos={ideas.flatMap((i) => (i.imageUrl ? [{ url: i.imageUrl, name: i.title }] : []))} />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-bold">Idées</h2>

@@ -21,6 +21,12 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
   return (
     <li className="flex flex-col rounded-2xl bg-surface">
       <div className="flex items-start">
+        {i.imageUrl && (
+          <Link href={`/carnet/idees/${i.id}`} className="ml-1.5 mt-1.5 h-14 w-14 shrink-0 overflow-hidden rounded-xl" tabIndex={-1} aria-hidden="true">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={i.imageUrl} alt="" className="h-full w-full object-cover" />
+          </Link>
+        )}
         <Link href={`/carnet/idees/${i.id}`} className="flex min-h-[56px] min-w-0 flex-1 flex-col justify-center gap-0.5 py-2.5 pl-3">
           <span className="text-[16px] font-semibold">{i.title}</span>
           <span className="truncate text-[14px] text-muted">{details}</span>

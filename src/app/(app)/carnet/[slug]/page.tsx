@@ -11,6 +11,7 @@ import { GiftList } from "../offerts/GiftList";
 import { BriefButton } from "./BriefButton";
 import { InfoChips } from "./InfoChips";
 import { TraitChips } from "./TraitChips";
+import { PhotoPicker } from "@/components/PhotoPicker";
 import { NotesForm } from "./NotesForm";
 import { EditableTitle } from "@/components/EditableTitle";
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -50,9 +51,12 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
     <div className="flex flex-col gap-4">
       <BackLink href="/carnet">Carnet</BackLink>
 
-      <div className="flex flex-col">
-        <EditableTitle value={person.name} onSave={renamePerson.bind(null, person.slug)} />
-        {age && <span className="text-[15px] text-muted">{age}</span>}
+      <div className="flex items-center gap-3">
+        <PhotoPicker kind="persons" id={person.id} url={person.photoUrl ?? null} fallback={person.name.charAt(0)} />
+        <div className="flex min-w-0 flex-col">
+          <EditableTitle value={person.name} onSave={renamePerson.bind(null, person.slug)} />
+          {age && <span className="text-[15px] text-muted">{age}</span>}
+        </div>
       </div>
 
       <InfoChips
@@ -83,7 +87,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       <Section
         title="Idées"
         count={ideas.length}
-        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas, sizes: person.sizes }])} label="Partager" small />}
+        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas, sizes: person.sizes }])} label="Partager" small photos={ideas.flatMap((i) => (i.imageUrl ? [{ url: i.imageUrl, name: i.title }] : []))} />}
       >
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </Section>

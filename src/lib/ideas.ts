@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { signPhotos } from "@/lib/photos";
 
 
 export type Recipient = { kind: "person" | "group"; id: string; slug: string; name: string };
@@ -16,9 +17,11 @@ export type Idea = {
   created_at: string;
   recipients: Recipient[];
   given: boolean; // déjà offerte : au moins un cadeau offert issu de cette idée
+  image_path: string | null;
+  imageUrl: string | null; // lien temporaire vers la photo (#88)
 };
 
-type IdeaRow = Omit<Idea, "recipients" | "given"> & {
+type IdeaRow = Omit<Idea, "recipients" | "given" | "imageUrl"> & {
   gifts: { status: string }[];
   idea_recipients: {
     persons: { id: string; slug: string; name: string } | null;
@@ -26,7 +29,7 @@ type IdeaRow = Omit<Idea, "recipients" | "given"> & {
   }[];
 };
 
-const SELECT = `id, title, url, links, note, categories, is_lead, created_at,
+const SELECT = `id, title, url, links, note, categories, is_lead, image_path, created_at,
   idea_recipients(persons(id, slug, name), groups(id, slug, name)), gifts(status)`;
 
 // Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.
@@ -47,7 +50,7 @@ function toIdea(row: IdeaRow, me: string | null): Idea {
     return [];
   });
   recipients.sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  return { ...idea, recipients, given: gifts.some((g) => g.status === "given") };
+  return { ...idea, recipients, given: gifts.some((g) => g.status === "given"), imageUrl: null };
 }
 
 // Idées non archivées, les plus récentes d'abord. La RLS masque déjà les idées secrètes.
@@ -58,7 +61,9 @@ export async function listIdeas(): Promise<Idea[]> {
     myPersonId(),
   ]);
   if (error) throw error;
-  return (data ?? []).map((row) => toIdea(row, me));
+  const ideas = (data ?? []).map((row) => toIdea(row, me));
+  const urls = await signPhotos(ideas.map((i) => i.image_path));
+  return ideas.map((i) => ({ ...i, imageUrl: i.image_path ? (urls[i.image_path] ?? null) : null }));
 }
 
 export async function getIdea(id: string): Promise<Idea | null> {
@@ -68,7 +73,10 @@ export async function getIdea(id: string): Promise<Idea | null> {
     myPersonId(),
   ]);
   if (error) throw error;
-  return data ? toIdea(data, me) : null;
+  if (!data) return null;
+  const idea = toIdea(data, me);
+  const urls = await signPhotos([idea.image_path]);
+  return { ...idea, imageUrl: idea.image_path ? (urls[idea.image_path] ?? null) : null };
 }
 
 // Idées d'une personne : pour elle directement ou pour un de ses groupes.

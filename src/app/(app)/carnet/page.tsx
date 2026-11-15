@@ -86,9 +86,14 @@ async function Persons({ active }: { active: Trait[] }) {
                 <Link href={`/carnet/${p.slug}`} className="flex min-h-[56px] items-center gap-3 py-1.5">
                   <span
                     aria-hidden="true"
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-bold ${pastel.get(p.id)}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-[15px] font-bold ${pastel.get(p.id)}`}
                   >
-                    {p.name.charAt(0)}
+                    {p.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.photoUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      p.name.charAt(0)
+                    )}
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[16px] font-semibold">{p.name}</span>
