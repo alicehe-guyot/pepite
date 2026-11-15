@@ -59,7 +59,7 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
 export function IdeaList({ ideas, empty = "Aucune idée" }: { ideas: Idea[]; empty?: string }) {
   if (!ideas.length) return <Empty>{empty}</Empty>;
   return (
-    <ul className="grid gap-2 md:grid-cols-2">
+    <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
       {ideas.map((i) => (
         <IdeaRow key={i.id} idea={i} />
       ))}

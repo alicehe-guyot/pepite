@@ -12,13 +12,26 @@ const field = "rounded-xl bg-surface px-3 py-2.5 text-[16px] outline-accent plac
 const label = "text-[13px] font-semibold uppercase tracking-wide text-muted";
 
 // Cadeau déjà offert : quoi, pour qui, quand, occasion, puis la note (facultative : sinon « À noter »).
-export function GiftForm({ choices, categories, today }: { choices: Choice[]; categories: string[]; today: string }) {
+export function GiftForm({
+  choices,
+  categories,
+  today,
+  preset = [],
+  back,
+}: {
+  choices: Choice[];
+  categories: string[];
+  today: string;
+  preset?: string[];
+  back?: string;
+}) {
   const [message, action, pending] = useActionState(addGivenGift, null);
   const people = choices.filter((c) => c.kind === "person");
   const groups = choices.filter((c) => c.kind === "group");
 
   return (
     <form action={action} className="flex flex-col gap-5 md:max-w-2xl">
+      {back && <input type="hidden" name="back" value={back} />}
       <label className="flex flex-col gap-1">
         <span className={label}>Quoi</span>
         <input name="title" required autoFocus autoComplete="off" className={`h-12 ${field}`} />
@@ -29,7 +42,7 @@ export function GiftForm({ choices, categories, today }: { choices: Choice[]; ca
         <div className="flex flex-wrap gap-2">
           {people.map((c) => (
             <label key={c.id} className={chip}>
-              <input type="checkbox" name="for" value={`person:${c.id}`} className="sr-only" />
+              <input type="checkbox" name="for" value={`person:${c.id}`} defaultChecked={preset.includes(`person:${c.id}`)} className="sr-only" />
               {c.name}
             </label>
           ))}
@@ -37,7 +50,7 @@ export function GiftForm({ choices, categories, today }: { choices: Choice[]; ca
         <div className="mt-2 flex flex-wrap gap-2">
           {groups.map((c) => (
             <label key={c.id} className={chip}>
-              <input type="checkbox" name="for" value={`group:${c.id}`} className="sr-only" />
+              <input type="checkbox" name="for" value={`group:${c.id}`} defaultChecked={preset.includes(`group:${c.id}`)} className="sr-only" />
               {c.name}
             </label>
           ))}

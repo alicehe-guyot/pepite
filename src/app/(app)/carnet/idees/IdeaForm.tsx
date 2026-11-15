@@ -29,9 +29,21 @@ function Chip({ type, name, value, checked, children }: { type: "checkbox" | "ra
   );
 }
 
-export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; categories: readonly string[]; idea?: Initial }) {
+export function IdeaForm({
+  choices,
+  categories,
+  idea,
+  preset = [],
+  back,
+}: {
+  choices: Choice[];
+  categories: readonly string[];
+  idea?: Initial;
+  preset?: string[]; // destinataires cochés d'office, ex. depuis une fiche (#90)
+  back?: string; // page où revenir après l'ajout
+}) {
   const [message, action, pending] = useActionState(saveIdea.bind(null, idea?.id ?? null), null);
-  const chosen = new Set(idea?.recipients.map((r) => `${r.kind}:${r.id}`));
+  const chosen = new Set(idea ? idea.recipients.map((r) => `${r.kind}:${r.id}`) : preset);
   const people = choices.filter((c) => c.kind === "person");
   const groups = choices.filter((c) => c.kind === "group");
   // Au moins 3 champs de lien, plus à la demande (retour Alice #8).
@@ -42,6 +54,7 @@ export function IdeaForm({ choices, categories, idea }: { choices: Choice[]; cat
 
   return (
     <form action={action} className="flex flex-col gap-5 md:max-w-2xl">
+      {back && <input type="hidden" name="back" value={back} />}
       {!idea && (
         <label className="flex flex-col gap-1">
           <span className={label}>Titre ou lien</span>

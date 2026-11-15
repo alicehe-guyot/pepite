@@ -17,6 +17,17 @@ import { EditableTitle } from "@/components/EditableTitle";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { deletePerson, renamePerson } from "../actions";
 
+function AddLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} className="flex h-11 items-center gap-1 rounded-xl px-2 text-[15px] font-semibold text-accent">
+      <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+        <path d="M7 2v10M2 7h10" />
+      </svg>
+      {label}
+    </Link>
+  );
+}
+
 function Section({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
@@ -87,12 +98,17 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       <Section
         title="Idées"
         count={ideas.length}
-        action={ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas, sizes: person.sizes }])} label="Partager" small photos={ideas.flatMap((i) => (i.imageUrl ? [{ url: i.imageUrl, name: i.title }] : []))} />}
+        action={
+          <span className="flex items-center">
+            <AddLink href={`/capture?pour=person:${person.id}&retour=/carnet/${person.slug}`} label="Idée" />
+            {ideas.length > 0 && <ShareButton text={shareText(`Idées cadeaux pour ${person.name}`, [{ name: person.name, ideas, sizes: person.sizes }])} label="Partager" small photos={ideas.flatMap((i) => (i.imageUrl ? [{ url: i.imageUrl, name: i.title }] : []))} />}
+          </span>
+        }
       >
         <IdeaList ideas={ideas} empty="Pas encore d'idée" />
       </Section>
 
-      <Section title="Déjà offert" count={given.length}>
+      <Section title="Déjà offert" count={given.length} action={<AddLink href={`/capture?type=offert&pour=person:${person.id}&retour=/carnet/${person.slug}`} label="Offert" />}>
         <GiftList gifts={given} empty="Rien d'offert pour l'instant" />
       </Section>
 
