@@ -33,7 +33,11 @@ export async function proxy(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    url.search = "";
+    const redirect = NextResponse.redirect(url);
+    // Après connexion, revenir là où on allait (ex. une capture venue du raccourci iOS).
+    if (path !== "/") redirect.cookies.set("suite", path + request.nextUrl.search, { maxAge: 600, httpOnly: true, sameSite: "lax", path: "/" });
+    return redirect;
   }
 
   return response;

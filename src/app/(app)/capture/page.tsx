@@ -7,8 +7,14 @@ import { GiftForm } from "../carnet/offerts/GiftForm";
 
 // ＋ : une nouvelle idée (SPEC US-C2, seul le titre ou le lien est requis) ou un cadeau déjà offert (#56).
 // `pour` (person:<id> ou group:<id>) coche d'office le destinataire ; `retour` : page où revenir (#90).
-export default async function CapturePage({ searchParams }: { searchParams: Promise<{ type?: string; pour?: string; retour?: string }> }) {
-  const { type, pour, retour } = await searchParams;
+// `texte` : ce que le raccourci iOS « Pépite » reçoit du bouton Partager (lien, ou texte contenant un lien).
+export default async function CapturePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string; pour?: string; retour?: string; texte?: string }>;
+}) {
+  const { type, pour, retour, texte } = await searchParams;
+  const shared = splitShared(texte);
   const preset = pour && /^(person|group):[0-9a-f-]{36}$/.test(pour) ? [pour] : [];
   const back = retour?.startsWith("/carnet/") ? retour : undefined;
   const keep = new URLSearchParams({ ...(pour && { pour }), ...(back && { retour: back }) }).toString();
@@ -29,7 +35,17 @@ export default async function CapturePage({ searchParams }: { searchParams: Prom
           Déjà offert
         </Link>
       </nav>
-      {given ? <GiftForm choices={choices} categories={categories} today={today} preset={preset} back={back} /> : <IdeaForm choices={choices} categories={categories} preset={preset} back={back} />}
+      {given ? <GiftForm choices={choices} categories={categories} today={today} preset={preset} back={back} /> : <IdeaForm choices={choices} categories={categories} preset={preset} back={back} shared={shared} />}
     </div>
   );
+}
+
+// Un partage arrive souvent sous la forme « Regarde ça https://… » : le lien va dans le titre
+// (l'enregistrement en tire le vrai titre de la page), le reste dans le commentaire.
+function splitShared(texte?: string): { title: string; note: string } | undefined {
+  const text = texte?.trim().slice(0, 2000);
+  if (!text) return undefined;
+  const link = text.match(/https?:\/\/\S+/)?.[0];
+  if (!link) return { title: text, note: "" };
+  return { title: link, note: text.replace(link, " ").replace(/\s+/g, " ").trim() };
 }

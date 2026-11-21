@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,7 +17,13 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
   const supabase = await createClient();
   for (const account of ACCOUNTS) {
     const { error } = await supabase.auth.signInWithPassword({ email: `${account}@pepite.local`, password });
-    if (!error) redirect("/agenda");
+    if (!error) {
+      const jar = await cookies();
+      const suite = jar.get("suite")?.value;
+      jar.delete("suite");
+      // Seulement un chemin interne, jamais une autre adresse.
+      redirect(suite?.startsWith("/") && !suite.startsWith("//") ? suite : "/agenda");
+    }
     if (error.status === 429) return "Trop d’essais, patiente un peu";
   }
   return "Mot de passe incorrect";

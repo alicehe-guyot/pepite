@@ -35,12 +35,14 @@ export function IdeaForm({
   idea,
   preset = [],
   back,
+  shared,
 }: {
   choices: Choice[];
   categories: readonly string[];
   idea?: Initial;
   preset?: string[]; // destinataires cochés d'office, ex. depuis une fiche (#90)
   back?: string; // page où revenir après l'ajout
+  shared?: { title: string; note: string }; // reçu du raccourci iOS
 }) {
   const [message, action, pending] = useActionState(saveIdea.bind(null, idea?.id ?? null), null);
   const chosen = new Set(idea ? idea.recipients.map((r) => `${r.kind}:${r.id}`) : preset);
@@ -61,8 +63,9 @@ export function IdeaForm({
           <input
             name="title"
             required
-            autoFocus
-                        autoComplete="off"
+            autoFocus={!shared}
+            defaultValue={shared?.title}
+            autoComplete="off"
             placeholder="Coller un lien ou écrire"
             className={`h-12 ${field}`}
           />
@@ -75,7 +78,7 @@ export function IdeaForm({
         <textarea
           name="note"
           rows={2}
-          defaultValue={idea?.note ?? ""}
+          defaultValue={idea?.note ?? shared?.note ?? ""}
           className={`field-sizing-content min-h-[48px] resize-none ${field}`}
         />
       </label>
