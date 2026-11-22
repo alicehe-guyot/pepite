@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { eventsBetween, parisToday } from "@/lib/agenda";
+import { eventsBetween, parisToday, type EventGift, type Step } from "@/lib/agenda";
 import type { GivenGift } from "@/lib/gifts";
 import type { Idea } from "@/lib/ideas";
 import { age, type Person } from "@/lib/persons";
@@ -19,10 +19,16 @@ export async function myPrinciples(): Promise<string | null> {
 }
 
 // Événements à venir de la personne dans l'année (anniversaire, Noël…), le plus proche d'abord.
-export async function upcomingEventsFor(personId: string): Promise<{ id: string; title: string; date: Date }[]> {
+// Avec, pour chacun, l'étape de la personne et le cadeau choisi s'il y en a un.
+export async function upcomingEventsFor(
+  personId: string,
+): Promise<{ id: string; title: string; date: Date; step: Step; gift: EventGift | null }[]> {
   const today = parisToday();
   const events = await eventsBetween(today, new Date(today.getTime() + 366 * 86_400_000));
-  return events.filter((e) => e.persons.some((p) => p.id === personId));
+  return events.flatMap((e) => {
+    const p = e.persons.find((p) => p.id === personId);
+    return p ? [{ id: e.id, title: e.title, date: e.date, step: p.step, gift: p.gift }] : [];
+  });
 }
 
 // Brief pour Instinct (SPEC §8.10) : centré sur la personne, sans adresse ni nom de famille.

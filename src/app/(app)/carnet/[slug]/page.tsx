@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { ShareButton } from "@/components/ShareButton";
+import { STEP_LABEL } from "@/lib/agenda";
 import { buildBrief, myPrinciples, upcomingEventsFor } from "@/lib/brief";
 import { giftsFor, listGivenGifts } from "@/lib/gifts";
 import { ideasFor, listIdeas, shareText } from "@/lib/ideas";
@@ -57,6 +58,8 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
     { key: "aucun", label: "Sans occasion", text: buildBrief(person, { ideas, gifts: given, principles, event: null }) },
   ];
   const age = ageLabel(person);
+  // Ce qui est choisi pour les prochains événements, pas encore offert.
+  const chosen = events.flatMap((e) => (e.gift && e.step !== "given" ? [{ event: e, gift: e.gift, step: e.step }] : []));
 
   return (
     <div className="flex flex-col gap-4">
@@ -94,6 +97,27 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
       )}
 
       <BriefButton briefs={briefs} />
+
+      {chosen.length > 0 && (
+        <Section title="Choisi" count={chosen.length}>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {chosen.map(({ event, gift, step }) => (
+              <li key={`${event.id}-${gift.id}`}>
+                <Link href={`/agenda/${event.id}`} className={`flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2 ${step === "ready" ? "bg-ready" : "bg-progress"}`}>
+                  <span aria-hidden="true" className={`h-3 w-3 shrink-0 rounded-full ${step === "ready" ? "bg-ready-dot" : "bg-progress-dot"}`} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-[16px] font-semibold">{gift.title}</span>
+                      <span className="shrink-0 text-[13px] font-semibold">{STEP_LABEL[step]}</span>
+                    </span>
+                    <span className="truncate text-[14px] text-muted">{event.title}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
       <Section
         title="Idées"
