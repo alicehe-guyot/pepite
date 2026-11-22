@@ -66,12 +66,11 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
   const title = pasted ? await titleFromLink(pasted) : text || undefined;
 
   const recipients = formData.getAll("for").map(String);
-  // Secret : caché à l'autre compte (JB ou Alice), visible de moi seul.
+  // Secret à la création : caché à l'autre compte (JB ou Alice). Ensuite, il se change par setIdeaSecret.
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   const uid = auth?.claims.sub;
   if (!uid) return "Session expirée";
-  const hidden_by = formData.get("secret") ? uid : null;
   const categories = [...new Set(formData.getAll("categories").map(String).filter(Boolean))];
   const fields = {
     ...(title && { title }),
@@ -79,7 +78,7 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     note: String(formData.get("note") ?? "").trim() || null,
     categories,
     status: recipients.length ? "sorted" : "inbox",
-    hidden_by,
+    ...(!id && { hidden_by: formData.get("secret") ? uid : null }),
   };
 
   let ideaId = id;
@@ -88,8 +87,6 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     if (error) return "Enregistrement impossible";
     const { error: delError } = await supabase.from("idea_recipients").delete().eq("idea_id", ideaId);
     if (delError) return "Enregistrement impossible";
-    // Les cadeaux en cours tirés de l'idée suivent son secret.
-    await supabase.from("gifts").update({ hidden_by }).eq("idea_id", ideaId).neq("status", "given");
   } else {
     // Identifiant créé ici, insertion sans relecture : la politique de lecture des idées
     // (private.can_see_idea) relit la table et ne voit pas encore la ligne en cours d'insertion,
@@ -162,6 +159,21 @@ export async function unmarkGiven(id: string): Promise<void> {
     .limit(1);
   if (data?.[0]) await supabase.from("gifts").delete().eq("id", data[0].id);
   revalidatePath("/carnet", "layout");
+}
+
+// Cacher l'idée à l'autre compte, ou la révéler. Les cadeaux en cours tirés de l'idée suivent.
+export async function setIdeaSecret(id: string, secret: boolean): Promise<string | null> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const uid = auth?.claims.sub;
+  if (!uid) return "Session expirée";
+  const hidden_by = secret ? uid : null;
+  const { error } = await supabase.from("ideas").update({ hidden_by }).eq("id", id);
+  if (error) return "Enregistrement impossible";
+  await supabase.from("gifts").update({ hidden_by }).eq("idea_id", id).neq("status", "given");
+  revalidatePath("/carnet", "layout");
+  revalidatePath("/agenda", "layout");
+  return null;
 }
 
 // Renommer une idée depuis son titre (#75).

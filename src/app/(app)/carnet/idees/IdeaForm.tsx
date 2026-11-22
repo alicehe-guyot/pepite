@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Lock } from "@/components/Lock";
 import { saveIdea } from "./actions";
 
 type Choice = { kind: "person" | "group"; id: string; name: string };
@@ -12,7 +13,6 @@ type Initial = {
   note: string | null;
   categories: string[];
   is_lead: boolean;
-  secret: boolean;
   recipients: { kind: "person" | "group"; id: string }[];
 };
 
@@ -70,6 +70,13 @@ export function IdeaForm({
             placeholder="Coller un lien ou écrire"
             className={`h-12 ${field}`}
           />
+        </label>
+      )}
+      {!idea && (
+        <label className={`${chip} w-fit gap-2`}>
+          <input type="checkbox" name="secret" value="1" className="sr-only" />
+          <Lock size={15} />
+          Secret
         </label>
       )}
 
@@ -134,15 +141,6 @@ export function IdeaForm({
         </div>
       </fieldset>
 
-
-      <fieldset className="flex flex-col gap-2">
-        <legend className={`${label} mb-2`}>Visible par</legend>
-        <div className="flex flex-wrap gap-2">
-          <Chip type="checkbox" name="secret" value="1" checked={idea?.secret ?? false}>
-            Secret
-          </Chip>
-        </div>
-      </fieldset>
 
       <div className="sticky bottom-24 md:bottom-4 flex items-center gap-3 bg-bg pt-1">
         <button
