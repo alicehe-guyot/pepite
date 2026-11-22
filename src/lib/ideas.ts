@@ -16,12 +16,14 @@ export type Idea = {
   is_lead: boolean;
   created_at: string;
   recipients: Recipient[];
+  secret: boolean; // cachée par moi : l'autre ne la voit pas
   given: boolean; // déjà offerte : au moins un cadeau offert issu de cette idée
   image_path: string | null;
   imageUrl: string | null; // lien temporaire vers la photo (#88)
 };
 
-type IdeaRow = Omit<Idea, "recipients" | "given" | "imageUrl"> & {
+type IdeaRow = Omit<Idea, "recipients" | "given" | "imageUrl" | "secret"> & {
+  hidden_by: string | null;
   gifts: { status: string }[];
   idea_recipients: {
     persons: { id: string; slug: string; name: string } | null;
@@ -29,7 +31,7 @@ type IdeaRow = Omit<Idea, "recipients" | "given" | "imageUrl"> & {
   }[];
 };
 
-const SELECT = `id, title, url, links, note, categories, is_lead, image_path, created_at,
+const SELECT = `id, title, url, links, note, categories, is_lead, image_path, created_at, hidden_by,
   idea_recipients(persons(id, slug, name), groups(id, slug, name)), gifts(status)`;
 
 // Fiche liée au compte connecté : affichée « Moi ». Une seule requête par rendu.
@@ -43,17 +45,17 @@ export const myPersonId = cache(async (): Promise<string | null> => {
 });
 
 function toIdea(row: IdeaRow, me: string | null): Idea {
-  const { idea_recipients, gifts, ...idea } = row;
+  const { idea_recipients, gifts, hidden_by, ...idea } = row;
   const recipients = idea_recipients.flatMap((r): Recipient[] => {
     if (r.persons) return [{ kind: "person", ...r.persons, name: r.persons.id === me ? "Moi" : r.persons.name }];
     if (r.groups) return [{ kind: "group", ...r.groups }];
     return [];
   });
   recipients.sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  return { ...idea, recipients, given: gifts.some((g) => g.status === "given"), imageUrl: null };
+  return { ...idea, recipients, secret: hidden_by !== null, given: gifts.some((g) => g.status === "given"), imageUrl: null };
 }
 
-// Idées non archivées, les plus récentes d'abord. La RLS masque déjà les idées secrètes.
+// Idées non archivées, les plus récentes d'abord. La RLS masque déjà les idées cachées par l'autre.
 export async function listIdeas(): Promise<Idea[]> {
   const supabase = await createClient();
   const [{ data, error }, me] = await Promise.all([

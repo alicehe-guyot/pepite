@@ -199,12 +199,13 @@ Cas : *j'ai oublié l'anniversaire, je passe devant une librairie ou un magasin 
 
 ### 8.5 Partage avec JB et secret
 
-- CA1 : JB a un compte et voit tout, sauf les cadeaux et idées dont il est destinataire (directement ou via un groupe dont il fait partie).
-- CA2 : un cadeau commun dont JB est co-destinataire (ex. un week-end pour nous trois) est **visible par JB par défaut** ; le créateur peut le masquer.
-- CA2 bis : les idées que je crée pour moi-même (mes envies) sont visibles par moi et par JB. Elles remplacent la liste de souhaits.
-- CA3 : JB peut créer, modifier, commander, changer les statuts.
-- CA4 : la règle est appliquée **dans la base** (RLS), pas seulement à l'écran.
-- CA5 : des tests automatiques vérifient qu'aucune requête faite en tant que JB ne renvoie un de ses cadeaux.
+> Mis à jour le 2026-11-22 : le secret automatique (masquer tout ce dont JB est destinataire) est remplacé par un secret à la main.
+
+- CA1 : JB a son propre compte et son propre mot de passe. Il voit tout (personnes, idées, cadeaux, déjà offerts) et peut tout remplir, sauf ce qu'Alice a marqué « Secret ». Réciproquement, Alice ne voit pas ce que JB a marqué « Secret ».
+- CA2 : « Secret » se coche sur une idée (formulaire) ou sur un cadeau (Agenda). Rien n'est secret par défaut, même pour JB : il peut lui-même ajouter des idées pour lui ou pour la famille.
+- CA3 : un cadeau retenu depuis une idée secrète reste secret. Une fois offert, le cadeau et son idée ne sont plus secrets.
+- CA4 : seul celui qui a caché une ligne la voit ; personne ne peut cacher une ligne au nom de l'autre. Appliqué dans la base (RLS, colonne `hidden_by`), testé dans `supabase/tests/secret.test.sql`.
+- CA5 : chacun a ses principes de cadeaux, repris dans son brief.
 
 ### 8.6 Ce que mes notes actuelles imposent
 
@@ -552,6 +553,7 @@ Instinct n'a **pas besoin d'écrire** dans Pépite en V1 : le raccourci de parta
 | 2026-11-07 | Import initial : groupes importés en transverses (à ranger en cercles et foyers), loved → Effet wow, ok → A marché, collection → catégorie, tout créé au nom d'Alice | Choix d'Alice ; JB ne voit donc aucun cadeau importé dont il est destinataire |
 | 2026-11-07 | Connexion par mot de passe seul, sans email ni envoi d'email : un compte interne par personne (`<prénom>@pepite.local`), un mot de passe différent par personne | Le lien et le code par email exigent un SMTP personnalisé ; l'app installée sur iPhone ne partage pas sa session avec Safari |
 | 2026-11-07 | Pour l'instant, un mot de passe commun pour tous (compte d'Alice) : tout le monde voit tout, le secret de JB est suspendu à l'écran | Choix d'Alice pour ouvrir l'app vite ; la RLS reste en place et se réactive avec un compte JB |
+| 2026-11-22 | Compte de JB ; secret à la main (« Secret » sur une idée ou un cadeau, caché à l'autre) au lieu du secret automatique par destinataire ; rien n'est secret par défaut ni dans l'existant ; révélé quand c'est offert | Choix d'Alice : JB ajoute souvent des idées pour lui ou pour la famille |
 | 2026-11-14 | Carnet > Idées et capture ＋ : un lien collé prend le titre de son aperçu Open Graph (repli : nom du site) ; une idée sans destinataire va dans « Sans personne » ; supprimer = archiver | Rendre l'app utilisable avant Noël ; rien n'est effacé par erreur |
 | 2026-11-14 | Une idée se supprime vraiment (croix sur la ligne, second tap pour confirmer), elle ne s'archive plus | Retour d'Alice (#9) |
 | 2026-11-14 | On garde les 5 rubriques du portrait pour ce qui est structuré (situation, passions, style, à éviter, envies) ; les Notes libres deviennent modifiables et vont sous le portrait | Retour d'Alice (#26), pas sûre de l'utilité des catégories : les rubriques nourrissent le brief, les notes gardent le reste |

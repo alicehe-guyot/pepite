@@ -66,6 +66,12 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
   const title = pasted ? await titleFromLink(pasted) : text || undefined;
 
   const recipients = formData.getAll("for").map(String);
+  // Secret : caché à l'autre compte (JB ou Alice), visible de moi seul.
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const uid = auth?.claims.sub;
+  if (!uid) return "Session expirée";
+  const hidden_by = formData.get("secret") ? uid : null;
   const categories = [...new Set(formData.getAll("categories").map(String).filter(Boolean))];
   const fields = {
     ...(title && { title }),
@@ -73,15 +79,17 @@ export async function saveIdea(id: string | null, _prev: string | null, formData
     note: String(formData.get("note") ?? "").trim() || null,
     categories,
     status: recipients.length ? "sorted" : "inbox",
+    hidden_by,
   };
 
-  const supabase = await createClient();
   let ideaId = id;
   if (ideaId) {
     const { error } = await supabase.from("ideas").update(fields).eq("id", ideaId);
     if (error) return "Enregistrement impossible";
     const { error: delError } = await supabase.from("idea_recipients").delete().eq("idea_id", ideaId);
     if (delError) return "Enregistrement impossible";
+    // Les cadeaux en cours tirés de l'idée suivent son secret.
+    await supabase.from("gifts").update({ hidden_by }).eq("idea_id", ideaId).neq("status", "given");
   } else {
     // Identifiant créé ici, insertion sans relecture : la politique de lecture des idées
     // (private.can_see_idea) relit la table et ne voit pas encore la ligne en cours d'insertion,
@@ -123,6 +131,8 @@ export async function markGiven(id: string, rating?: "wow" | "worked" | "miss" |
     .eq("id", id)
     .single<{ title: string; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
   if (!idea) return "Idée introuvable";
+  // Offerte : la surprise est passée, l'idée n'est plus secrète.
+  await supabase.from("ideas").update({ hidden_by: null }).eq("id", id);
   // Même raison que pour les idées : identifiant créé ici, pas de relecture à l'insertion.
   const giftId = crypto.randomUUID();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
