@@ -28,7 +28,10 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
           </Link>
         )}
         <Link href={`/carnet/idees/${i.id}`} className="flex min-h-[56px] min-w-0 flex-1 flex-col justify-center gap-0.5 py-2.5 pl-3">
-          <span className="text-[16px] font-semibold">{i.title}</span>
+          <span className="flex items-baseline gap-2">
+            <span className="text-[16px] font-semibold">{i.title}</span>
+            {i.secret && <span className="shrink-0 rounded-full bg-bg px-2 py-0.5 text-[12px] font-semibold text-accent">Secret</span>}
+          </span>
           <span className="truncate text-[14px] text-muted">{details}</span>
           {i.note && <span className="line-clamp-2 text-[14px]">{i.note}</span>}
         </Link>

@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 // Connexion par mot de passe seul, sans email ni envoi d'email.
-// Pour l'instant, un seul mot de passe commun ouvre le compte d'Alice : tout le monde voit tout
-// (décision d'Alice du 2026-11-07, SPEC §19). Pour rétablir le secret de JB, ajouter "jb"
-// ici avec son propre mot de passe (scripts/set-password.mjs jb JB).
-const ACCOUNTS = ["alice"];
+// Un compte par personne, chacun son mot de passe (scripts/set-password.mjs jb JB) : c'est le
+// mot de passe qui dit qui entre. Chacun voit tout sauf ce que l'autre a marqué « Secret »
+// (SPEC §8.5, décision du 2026-11-22).
+const ACCOUNTS = ["alice", "jb"];
 
 export async function signIn(_prev: string | null, formData: FormData): Promise<string | null> {
   const password = String(formData.get("password") ?? "");

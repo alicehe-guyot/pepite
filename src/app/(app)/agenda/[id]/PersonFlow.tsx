@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import type { EventGift, Step } from "@/lib/agenda";
 import { RatingPicker } from "../../carnet/offerts/RatingPicker";
-import { chooseIdea, chooseNew, dropGift, giveGift, removePerson, setGiftStep } from "../actions";
+import { chooseIdea, chooseNew, dropGift, giveGift, removePerson, setGiftSecret, setGiftStep } from "../actions";
 
 const LABEL: Record<Step, string> = { to_find: "À trouver", chosen: "Choisi", ordered: "Acheté", ready: "Prêt", given: "Offert" };
 const BG: Record<Step, string> = { to_find: "bg-todo", chosen: "bg-progress", ordered: "bg-progress", ready: "bg-ready", given: "bg-ready" };
@@ -71,7 +71,20 @@ export function PersonFlow({
                   <li key={s} className={`h-1.5 flex-1 rounded ${STEPS.indexOf(s) <= STEPS.indexOf(step) ? DOT[step] : "bg-surface"}`} title={LABEL[s]} />
                 ))}
               </ol>
-              <p className="text-[16px] font-semibold">{gift.title}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[16px] font-semibold">{gift.title}</p>
+                {step !== "given" && (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    aria-pressed={gift.secret}
+                    onClick={() => run(() => setGiftSecret(gift.id, !gift.secret))}
+                    className={`h-11 shrink-0 rounded-full px-4 text-[14px] font-semibold disabled:opacity-60 ${gift.secret ? "bg-accent text-white" : "bg-surface text-muted"}`}
+                  >
+                    Secret
+                  </button>
+                )}
+              </div>
               {step === "ordered" && gift.needsPickup && <p className="text-[14px]">À récupérer{gift.pickupPlace ? ` : ${gift.pickupPlace}` : ""}</p>}
 
               {step === "chosen" &&
@@ -136,7 +149,7 @@ export function PersonFlow({
                   ))}
                 </ul>
               )}
-              <form action={newAction} className="flex gap-2">
+              <form action={newAction} className="flex flex-wrap gap-2">
                 <input
                   name="title"
                   required
@@ -148,6 +161,10 @@ export function PersonFlow({
                 <button type="submit" disabled={newPending} className={primary}>
                   Retenir
                 </button>
+                <label className="flex h-11 cursor-pointer items-center rounded-full bg-surface px-4 text-[14px] font-semibold text-muted has-checked:bg-accent has-checked:text-white">
+                  <input type="checkbox" name="secret" value="1" className="sr-only" />
+                  Secret
+                </label>
               </form>
               {newMessage && <span className="text-[14px] font-semibold text-accent">{newMessage}</span>}
               <Link href={`/carnet/${person.slug}`} className="flex min-h-11 w-fit items-center text-[15px] font-semibold text-accent">

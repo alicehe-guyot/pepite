@@ -29,6 +29,7 @@ export type EventGift = {
   status: GiftStatus;
   needsPickup: boolean;
   pickupPlace: string | null;
+  secret: boolean; // caché par moi à l'autre compte
   createdAt: Date;
   personIds: string[];
   groupIds: string[];
@@ -63,6 +64,7 @@ type EventRow = {
     status: GiftStatus;
     needs_pickup: boolean;
     pickup_place: string | null;
+    hidden_by: string | null;
     created_at: string;
     gift_recipients: { person_id: string | null; group_id: string | null }[];
   }[];
@@ -154,7 +156,7 @@ async function load(eventId?: string): Promise<Loaded> {
     .from("events")
     .select(
       `id, title, type, date, recurrence, reference_year, status_override, status_override_on, event_persons(persons(id, slug, name)),
-       gifts(id, title, status, needs_pickup, pickup_place, created_at, gift_recipients(person_id, group_id))`,
+       gifts(id, title, status, needs_pickup, pickup_place, hidden_by, created_at, gift_recipients(person_id, group_id))`,
     );
   if (eventId) query = query.eq("id", eventId);
   const [{ data, error }, { data: members, error: mError }] = await Promise.all([
@@ -180,6 +182,7 @@ function toAgendaEvent(e: EventRow, date: Date, today: Date, groupsOf: Map<strin
       status: g.status,
       needsPickup: g.needs_pickup,
       pickupPlace: g.pickup_place,
+      secret: g.hidden_by !== null,
       createdAt: new Date(g.created_at),
       personIds: g.gift_recipients.flatMap((r) => (r.person_id ? [r.person_id] : [])),
       groupIds: g.gift_recipients.flatMap((r) => (r.group_id ? [r.group_id] : [])),

@@ -12,6 +12,7 @@ type Initial = {
   note: string | null;
   categories: string[];
   is_lead: boolean;
+  secret: boolean;
   recipients: { kind: "person" | "group"; id: string }[];
 };
 
@@ -133,6 +134,15 @@ export function IdeaForm({
         </div>
       </fieldset>
 
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className={`${label} mb-2`}>Visible par</legend>
+        <div className="flex flex-wrap gap-2">
+          <Chip type="checkbox" name="secret" value="1" checked={idea?.secret ?? false}>
+            Secret
+          </Chip>
+        </div>
+      </fieldset>
 
       <div className="sticky bottom-24 md:bottom-4 flex items-center gap-3 bg-bg pt-1">
         <button

@@ -110,7 +110,7 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
                       <span className="truncate text-[16px] font-semibold">{gift.title}</span>
                       <span className="shrink-0 text-[13px] font-semibold">{STEP_LABEL[step]}</span>
                     </span>
-                    <span className="truncate text-[14px] text-muted">{event.title}</span>
+                    <span className="truncate text-[14px] text-muted">{gift.secret ? `${event.title}, secret` : event.title}</span>
                   </span>
                 </Link>
               </li>

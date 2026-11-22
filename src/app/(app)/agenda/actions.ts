@@ -17,12 +17,15 @@ export async function chooseIdea(eventId: string, ideaId: string): Promise<strin
   const supabase = await createClient();
   const { data: idea } = await supabase
     .from("ideas")
-    .select("title, idea_recipients(person_id, group_id)")
+    .select("title, hidden_by, idea_recipients(person_id, group_id)")
     .eq("id", ideaId)
-    .single<{ title: string; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
+    .single<{ title: string; hidden_by: string | null; idea_recipients: { person_id: string | null; group_id: string | null }[] }>();
   if (!idea) return "Idée introuvable";
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("gifts").insert({ id, title: idea.title, idea_id: ideaId, event_id: eventId, status: "chosen" });
+  // Le cadeau garde le secret de l'idée.
+  const { error } = await supabase
+    .from("gifts")
+    .insert({ id, title: idea.title, idea_id: ideaId, event_id: eventId, status: "chosen", hidden_by: idea.hidden_by });
   if (error) return "Enregistrement impossible";
   if (idea.idea_recipients.length) {
     const { error: e } = await supabase.from("gift_recipients").insert(idea.idea_recipients.map((r) => ({ gift_id: id, ...r })));
@@ -37,8 +40,12 @@ export async function chooseNew(eventId: string, personId: string, _prev: string
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return "Quoi ?";
   const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const uid = auth?.claims.sub;
+  if (!uid) return "Session expirée";
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("gifts").insert({ id, title, event_id: eventId, status: "chosen" });
+  const hidden_by = formData.get("secret") ? uid : null;
+  const { error } = await supabase.from("gifts").insert({ id, title, event_id: eventId, status: "chosen", hidden_by });
   if (error) return "Enregistrement impossible";
   const { error: e } = await supabase.from("gift_recipients").insert({ gift_id: id, person_id: personId });
   if (e) return "Destinataire non enregistré";
@@ -59,12 +66,27 @@ export async function setGiftStep(giftId: string, status: "chosen" | "ordered" |
 // Offert : date du jour et note (facultative, sinon « À noter »).
 export async function giveGift(giftId: string, rating: "wow" | "worked" | "miss" | null, comment = ""): Promise<string | null> {
   const supabase = await createClient();
-  const { error } = await supabase.from("gifts").update({ status: "given", given_on: today() }).eq("id", giftId);
+  // Offert : la surprise est passée, le cadeau (et son idée) n'est plus secret.
+  const { data: gift } = await supabase.from("gifts").select("idea_id").eq("id", giftId).maybeSingle();
+  const { error } = await supabase.from("gifts").update({ status: "given", given_on: today(), hidden_by: null }).eq("id", giftId);
   if (error) return "Enregistrement impossible";
+  if (gift?.idea_id) await supabase.from("ideas").update({ hidden_by: null }).eq("id", gift.idea_id);
   if (rating) {
     const { error: e } = await supabase.from("gift_feedback").upsert({ gift_id: giftId, rating, comment: comment.trim() || null });
     if (e) return "Note non enregistrée";
   }
+  refresh();
+  return null;
+}
+
+// Cacher le cadeau à l'autre compte, ou le révéler.
+export async function setGiftSecret(giftId: string, secret: boolean): Promise<string | null> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const uid = auth?.claims.sub;
+  if (!uid) return "Session expirée";
+  const { error } = await supabase.from("gifts").update({ hidden_by: secret ? uid : null }).eq("id", giftId);
+  if (error) return "Enregistrement impossible";
   refresh();
   return null;
 }
