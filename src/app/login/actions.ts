@@ -28,3 +28,10 @@ export async function signIn(_prev: string | null, formData: FormData): Promise<
   }
   return "Mot de passe incorrect";
 }
+
+// Se déconnecter (Réglages) : la session est effacée, retour à l'écran du mot de passe.
+export async function signOut(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
