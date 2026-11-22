@@ -7,6 +7,7 @@ import { getIdea, recipientChoices } from "@/lib/ideas";
 import { DeleteButton } from "../DeleteButton";
 import { IdeaForm } from "../IdeaForm";
 import { GiveIdea } from "./GiveIdea";
+import { SecretToggle } from "./SecretToggle";
 import { PhotoPicker } from "@/components/PhotoPicker";
 
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +21,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
       <BackLink href="/carnet?vue=idees">Idées</BackLink>
 
       <EditableTitle value={idea.title} onSave={renameIdea.bind(null, idea.id)} label="Titre" />
+      <SecretToggle id={idea.id} secret={idea.secret} />
       {idea.url && (
         <ul className="-mt-2 flex flex-wrap gap-x-4">
           {[idea.url, ...idea.links].map((l) => (

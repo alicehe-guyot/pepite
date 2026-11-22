@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import type { EventGift, Step } from "@/lib/agenda";
+import { Lock } from "@/components/Lock";
 import { RatingPicker } from "../../carnet/offerts/RatingPicker";
 import { chooseIdea, chooseNew, dropGift, giveGift, removePerson, setGiftSecret, setGiftStep } from "../actions";
 
@@ -49,6 +50,11 @@ export function PersonFlow({
               <span className="shrink-0 text-[13px] font-semibold">{LABEL[step]}</span>
             </span>
             <span className="truncate text-[14px] text-muted">
+              {gift?.secret && (
+                <span role="img" aria-label="Secret" className="mr-1 inline-block align-[-1px] text-accent">
+                  <Lock size={13} />
+                </span>
+              )}
               {gift ? gift.title : candidates.length ? `${candidates.length} ${candidates.length > 1 ? "idées" : "idée"}` : "Aucune idée"}
             </span>
           </span>

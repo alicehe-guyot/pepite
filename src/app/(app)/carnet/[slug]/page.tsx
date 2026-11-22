@@ -13,6 +13,7 @@ import { BriefButton } from "./BriefButton";
 import { InfoChips } from "./InfoChips";
 import { TraitChips } from "./TraitChips";
 import { PhotoPicker } from "@/components/PhotoPicker";
+import { Lock } from "@/components/Lock";
 import { NotesForm } from "./NotesForm";
 import { EditableTitle } from "@/components/EditableTitle";
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -107,10 +108,17 @@ export default async function PersonPage({ params }: { params: Promise<{ slug: s
                   <span aria-hidden="true" className={`h-3 w-3 shrink-0 rounded-full ${step === "ready" ? "bg-ready-dot" : "bg-progress-dot"}`} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="truncate text-[16px] font-semibold">{gift.title}</span>
+                      <span className="truncate text-[16px] font-semibold">
+                        {gift.secret && (
+                          <span role="img" aria-label="Secret" className="mr-1.5 inline-block align-[-1px] text-accent">
+                            <Lock />
+                          </span>
+                        )}
+                        {gift.title}
+                      </span>
                       <span className="shrink-0 text-[13px] font-semibold">{STEP_LABEL[step]}</span>
                     </span>
-                    <span className="truncate text-[14px] text-muted">{gift.secret ? `${event.title}, secret` : event.title}</span>
+                    <span className="truncate text-[14px] text-muted">{event.title}</span>
                   </span>
                 </Link>
               </li>
