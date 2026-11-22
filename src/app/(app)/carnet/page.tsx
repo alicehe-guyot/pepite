@@ -142,7 +142,7 @@ async function Persons({ active }: { active: Trait[] }) {
   );
 }
 
-type Filters = { qui?: string; statut?: string; cat?: string; note?: string; genre?: string; age?: string };
+type Filters = { qui?: string; statut?: string; cat?: string; note?: string; genre?: string; age?: string; tri?: string };
 
 // « Pour qui » : personnes (Moi d'abord) puis groupes, avec ce qu'ils couvrent.
 async function whoOptions(): Promise<WhoOption[]> {
@@ -167,7 +167,7 @@ async function Ideas({ filters }: { filters: Filters }) {
   const [all, who, categories, persons, groups] = await Promise.all([listIdeas(), whoOptions(), listCategories(), listPersons(), listGroups()]);
   const ideas = all.filter((i) => !i.given); // les idées offertes vivent dans Offerts
   const traits = Object.fromEntries(ideas.map((i) => [i.id, traitsOf(i.recipients, persons, groups)]));
-  return <IdeasView ideas={ideas} categories={categories} who={who} traits={traits} initial={initialOf(filters, ["qui", "genre", "age", "statut", "cat"])} />;
+  return <IdeasView ideas={ideas} categories={categories} who={who} traits={traits} initial={initialOf(filters, ["qui", "genre", "age", "statut", "cat", "tri"])} />;
 }
 
 async function Gifts({ filters }: { filters: Filters }) {
